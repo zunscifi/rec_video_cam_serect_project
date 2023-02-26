@@ -237,7 +237,7 @@ import java.util.TimerTask
         preview?.setSurfaceProvider(null)
     }
 
-    fun startRunningInForeground(activityClass: Class<out Activity>) {
+    fun startRunningInForeground(activityClass: Class<*>) {
         val parentStack = TaskStackBuilder.create(this)
             .addNextIntentWithParentStack(Intent(this, activityClass))
 

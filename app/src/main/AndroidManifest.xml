@@ -1,7 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+    <uses-feature android:name="android.hardware.camera.any" />
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera.autofocus"
+        android:required="false" />
 
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32"
+        tools:ignore="ScopedStorage" />
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -13,12 +26,13 @@
         android:theme="@style/Theme.RecordCamBackgroundProject"
         tools:targetApi="31">
         <service
-            android:name=".View.Activity.MediaRecordingService"
+            android:name="ziuzangdev.repo.rec_service.Control.Service.MediaRecordingService"
             android:enabled="true"
-            android:exported="false"/>
+            android:exported="false" />
         <activity
             android:name=".View.Activity.MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:theme="@style/Theme.Diary.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

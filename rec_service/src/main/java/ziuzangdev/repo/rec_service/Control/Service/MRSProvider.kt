@@ -8,8 +8,13 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
+import android.util.Log
+import android.widget.ImageButton
 import android.widget.TextView
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.video.VideoRecordEvent
@@ -17,6 +22,7 @@ import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
+import ziuzangdev.repo.rec_service.R
 import java.util.Calendar.HOUR
 import java.util.Calendar.MINUTE
 
@@ -24,7 +30,8 @@ class MRSProvider(
     private val context: Context,
     private val activityClass: Class<*>,
     private val previewView: PreviewView,
-    private val txtDuration: TextView
+    private val txtDuration: TextView,
+    private val btnRecord : ImageButton
 ) : MediaRecordingService.DataListener {
     private var recordingService: MediaRecordingService? = null
     private var isReverseLandscape: Boolean = false
@@ -115,16 +122,15 @@ class MRSProvider(
     override fun onNewData(duration: Int) {
         if(isGrantedPermission){
             if(context is Activity){
+                var seconds = duration
+                var minutes = seconds / MINUTE
+                seconds %= MINUTE
+                val hours = minutes / HOUR
+                minutes %= HOUR
+                val hoursString = if (hours >= 10) hours.toString() else "0$hours"
+                val minutesString = if (minutes >= 10) minutes.toString() else "0$minutes"
+                val secondsString = if (seconds >= 10) seconds.toString() else "0$seconds"
                 context.runOnUiThread {
-                    var seconds = duration
-                    var minutes = seconds / MINUTE
-                    seconds %= MINUTE
-                    val hours = minutes / HOUR
-                    minutes %= HOUR
-
-                    val hoursString = if (hours >= 10) hours.toString() else "0$hours"
-                    val minutesString = if (minutes >= 10) minutes.toString() else "0$minutes"
-                    val secondsString = if (seconds >= 10) seconds.toString() else "0$seconds"
                     txtDuration.text = "$hoursString:$minutesString:$secondsString"
                 }
             }
@@ -141,20 +147,26 @@ class MRSProvider(
         if(isGrantedPermission){
             when (it) {
                 is VideoRecordEvent.Start -> {
-
+                    Toast.makeText(context, "Start recording, you can close app, app still recording ...", Toast.LENGTH_SHORT).show()
                 }
-
                 is VideoRecordEvent.Finalize -> {
                     recordingService?.isSoundEnabled()?.let {
 
                     }
-
+                    btnRecord.setImageResource(R.drawable.icon_rec_video)
+                    Toast.makeText(context, "Recording video completed!", Toast.LENGTH_SHORT).show()
                     onNewData(0)
                     val intent = Intent(Intent.ACTION_VIEW, it.outputResults.outputUri)
                     intent.setDataAndType(it.outputResults.outputUri, "video/mp4")
                     context.startActivity(Intent.createChooser(intent, "Open recorded video"))
                 }
             }
+        }
+    }
+
+    override fun onRecordingState(it: MediaRecordingService.RecordingState?) {
+        if(it == MediaRecordingService.RecordingState.RECORDING){
+            btnRecord.setImageResource(R.drawable.icon_rec_video_recording)
         }
     }
 

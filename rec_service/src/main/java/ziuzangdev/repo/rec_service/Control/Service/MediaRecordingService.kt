@@ -12,10 +12,12 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Binder
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
 import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
+import androidx.annotation.WorkerThread
 import androidx.camera.core.CameraInfo
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.CameraState
@@ -70,7 +72,8 @@ import java.util.TimerTask
     private var duration: Int = 0
     private var timerTask: TimerTask? = null
     private var isSoundEnabled: Boolean = true
-
+     private var handler: Handler? = null
+     private var isServiceRunning = false
     override fun onCreate() {
         super.onCreate()
         recordingServiceBinder = RecordingServiceBinder(this)
@@ -158,6 +161,7 @@ import java.util.TimerTask
             }
             for (listener in listeners) {
                 listener.onRecordingEvent(it)
+                listener.onRecordingState(getRecordingState())
             }
         }
             ?.start()
@@ -269,6 +273,7 @@ import java.util.TimerTask
         super.onDestroy()
         activeRecording?.stop()
         timerTask?.cancel()
+        isServiceRunning = false
     }
 
     override fun onBind(intent: Intent): IBinder {
@@ -366,6 +371,8 @@ import java.util.TimerTask
         fun onNewData(duration: Int)
         fun onCameraOpened()
         fun onRecordingEvent(it: VideoRecordEvent?)
+        @WorkerThread
+        fun onRecordingState(it: RecordingState?)
     }
 
 }

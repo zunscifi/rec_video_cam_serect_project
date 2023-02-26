@@ -80,7 +80,7 @@ class MainActivity : AppCompatActivity(){
 
     private fun initMRSProvider() {
         mrsProvider = MRSProvider(this@MainActivity, MainActivity::class.java,
-            viewBinding.previewContainer, viewBinding.txtDuration)
+            viewBinding.previewContainer, viewBinding.txtDuration, viewBinding.btnRecord)
         if(mrsProvider?.requirePermission() == true){
             mrsProvider?.bindService()
         }else{

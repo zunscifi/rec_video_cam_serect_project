@@ -173,7 +173,7 @@ class MRSProvider(
             Manifest.permission.RECORD_AUDIO,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
         )
-        @RequiresApi(Build.VERSION_CODES.Q)
+        @RequiresApi(Build.VERSION_CODES.R)
         val CAMERA_PERMISSION_FROM30 = arrayOf(
             Manifest.permission.CAMERA,
             Manifest.permission.RECORD_AUDIO

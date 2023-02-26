@@ -12,6 +12,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.RecordCamBackgroundProject"
         tools:targetApi="31">
+        <service
+            android:name=".View.Activity.MediaRecordingService"
+            android:enabled="true"
+            android:exported="false"/>
         <activity
             android:name=".View.Activity.MainActivity"
             android:exported="true">

@@ -1,5 +1,4 @@
-package ziuzangdev.repo.rec_service.Control.Service
-
+package ziuzangdev.repo.recordcambackgroundproject.View.Activity
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -32,12 +31,12 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.TaskStackBuilder
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleService
+import ziuzangdev.repo.recordcambackgroundproject.R
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.Timer
 import java.util.TimerTask
-
- class MediaRecordingService : LifecycleService() {
+class MediaRecordingService : LifecycleService() {
 
     companion object {
         const val CHANNEL_ID: String = "media_recorder_service"
@@ -127,17 +126,18 @@ import java.util.TimerTask
             )
     }
 
-    @SuppressLint("MissingPermission")
     fun startRecording() {
+        Log.i("kkkkkkkkkkk", "startRecording")
         val mediaStoreOutputOptions = createMediaStoreOutputOptions()
         if (ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.RECORD_AUDIO
             ) != PackageManager.PERMISSION_GRANTED
         ) {
+            Log.i("kkkkkkkkkkk", "PERMISSION_NOT_GRANTED")
             return
         }
-
+        Log.i("kkkkkkkkkkk", "START REC")
         var pendingRecording = videoCapture?.output?.prepareRecording(this, mediaStoreOutputOptions)
         if (isSoundEnabled) {
             pendingRecording = pendingRecording?.withAudioEnabled()
@@ -184,6 +184,7 @@ import java.util.TimerTask
     }
 
     private fun createMediaStoreOutputOptions(): MediaStoreOutputOptions {
+        Log.i("kkkkkkkkkkk", "createMediaStoreOutputOptions")
         val name = "CameraX-recording-" +
                 SimpleDateFormat(FILENAME_FORMAT, Locale.getDefault())
                     .format(System.currentTimeMillis()) + ".mp4"
@@ -237,9 +238,9 @@ import java.util.TimerTask
         preview?.setSurfaceProvider(null)
     }
 
-    fun startRunningInForeground(activityClass: Class<out Activity>) {
+    fun startRunningInForeground() {
         val parentStack = TaskStackBuilder.create(this)
-            .addNextIntentWithParentStack(Intent(this, activityClass))
+            .addNextIntentWithParentStack(Intent(this, MainActivity::class.java))
 
         val pendingIntent1 = parentStack.getPendingIntent(0, 0)
 
@@ -250,7 +251,9 @@ import java.util.TimerTask
         }
 
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Video Recording...")
+            .setContentTitle("getText(R.string.video_recording)")
+            .setContentText("getText(R.string.video_recording_in_background)")
+            .setSmallIcon(R.mipmap.ic_launcher)
             .setContentIntent(pendingIntent1)
             .build()
         startForeground(ONGOING_NOTIFICATION_ID, notification)

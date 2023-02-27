@@ -18,6 +18,8 @@ import androidx.camera.video.VideoRecordEvent
 import androidx.core.app.ActivityCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
+import ziuzangdev.repo.app_setting.Control.RecSetting.SettingLogic
+import ziuzangdev.repo.app_setting.Control.RecSetting.SettingProvider
 import ziuzangdev.repo.rec_service.Control.Service.MRSProvider
 import ziuzangdev.repo.rec_service.Control.Service.MediaRecordingService
 import ziuzangdev.repo.recordcambackgroundproject.databinding.ActivityMainBinding
@@ -25,6 +27,7 @@ import ziuzangdev.repo.recordcambackgroundproject.databinding.ActivityMainBindin
 class MainActivity : AppCompatActivity(){
     private lateinit var viewBinding: ActivityMainBinding
     private var mrsProvider: MRSProvider? = null
+    private var settingProvider : SettingProvider? = null
 
     // Handle permission result
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -72,10 +75,25 @@ class MainActivity : AppCompatActivity(){
                 initMRSProvider()
             }
         }
+
+        viewBinding.cbIsShowPreview.setOnCheckedChangeListener { buttonView, isChecked ->
+            settingProvider?.saveSetting(SettingLogic.SETTING_IS_SHOW_PREVIEW, isChecked.toString())
+        }
     }
 
     private fun addControls() {
         initMRSProvider()
+        initSettingProvider()
+        initDefaultValue()
+    }
+
+    private fun initDefaultValue() {
+        val isShowPreview = settingProvider?.loadSetting(SettingLogic.SETTING_IS_SHOW_PREVIEW)?.settingValue.toBoolean()
+        viewBinding.cbIsShowPreview.isChecked = isShowPreview
+    }
+
+    private fun initSettingProvider() {
+        settingProvider = SettingProvider(this@MainActivity)
     }
 
     private fun initMRSProvider() {

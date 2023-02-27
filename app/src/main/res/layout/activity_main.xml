@@ -26,6 +26,14 @@
             android:layout_height="wrap_content"
             android:src="@drawable/icon_rec_video"
             android:background="?selectableItemBackgroundBorderless"/>
+        <CheckBox
+            android:id="@+id/cb_is_show_preview"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:text="Show Preview"
+            android:textColor="@color/white"
+            android:checked="true"
+            android:buttonTint="@color/secondary_color"/>
     </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"

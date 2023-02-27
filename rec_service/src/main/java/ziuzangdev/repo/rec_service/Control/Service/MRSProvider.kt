@@ -22,6 +22,8 @@ import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
+import ziuzangdev.repo.app_setting.Control.RecSetting.SettingLogic
+import ziuzangdev.repo.app_setting.Control.RecSetting.SettingProvider
 import ziuzangdev.repo.rec_service.R
 import java.util.Calendar.HOUR
 import java.util.Calendar.MINUTE
@@ -36,6 +38,7 @@ class MRSProvider(
     private var recordingService: MediaRecordingService? = null
     private var isReverseLandscape: Boolean = false
     private var isGrantedPermission: Boolean = false
+    private var settingProvider : SettingProvider? = null
     private val serviceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             recordingService = (service as MediaRecordingService.RecordingServiceBinder).getService()
@@ -47,6 +50,9 @@ class MRSProvider(
         }
     }
 
+    init {
+        settingProvider = SettingProvider(context)
+    }
     private fun onServiceBound(recordingService: MediaRecordingService?) {
         when(recordingService?.getRecordingState()){
             MediaRecordingService.RecordingState.RECORDING -> {
@@ -88,13 +94,11 @@ class MRSProvider(
     fun onPauseRecordClicked() : Boolean {
         when(recordingService?.getRecordingState()){
             MediaRecordingService.RecordingState.RECORDING -> {
-                println("fffffffffffff stop rec")
                 recordingService?.stopRecording()
                 return false
 
             }
             MediaRecordingService.RecordingState.STOPPED -> {
-                println("fffffffffffff start rec")
                 recordingService?.startRecording()
                 return true
             }
@@ -156,9 +160,12 @@ class MRSProvider(
                     btnRecord.setImageResource(R.drawable.icon_rec_video)
                     Toast.makeText(context, "Recording video completed!", Toast.LENGTH_SHORT).show()
                     onNewData(0)
-                    val intent = Intent(Intent.ACTION_VIEW, it.outputResults.outputUri)
-                    intent.setDataAndType(it.outputResults.outputUri, "video/mp4")
-                    context.startActivity(Intent.createChooser(intent, "Open recorded video"))
+                    val isShowPreview = settingProvider?.loadSetting(SettingLogic.SETTING_IS_SHOW_PREVIEW)?.settingValue.toBoolean()
+                    if(isShowPreview){
+                        val intent = Intent(Intent.ACTION_VIEW, it.outputResults.outputUri)
+                        intent.setDataAndType(it.outputResults.outputUri, "video/mp4")
+                        context.startActivity(Intent.createChooser(intent, "Open recorded video"))
+                    }
                 }
             }
         }

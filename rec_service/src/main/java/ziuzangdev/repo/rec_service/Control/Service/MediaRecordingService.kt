@@ -39,7 +39,7 @@ import java.util.Locale
 import java.util.Timer
 import java.util.TimerTask
 
- class MediaRecordingService : LifecycleService() {
+class MediaRecordingService : LifecycleService() {
 
     companion object {
         const val CHANNEL_ID: String = "media_recorder_service"

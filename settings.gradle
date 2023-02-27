@@ -15,3 +15,4 @@ dependencyResolutionManagement {
 rootProject.name = "RecordCamBackground Project"
 include ':app'
 include ':rec_service'
+include ':app_setting'

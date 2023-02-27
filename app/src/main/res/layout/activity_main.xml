@@ -26,21 +26,6 @@
             android:layout_height="wrap_content"
             android:src="@drawable/icon_rec_video"
             android:background="?selectableItemBackgroundBorderless"/>
-        <CheckBox
-            android:id="@+id/cb_is_show_preview"
-            android:layout_width="wrap_content"
-            android:layout_height="50dp"
-            android:text="Show Preview"
-            android:textColor="@color/white"
-            android:checked="true"
-            android:buttonTint="@color/secondary_color"/>
-    </LinearLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:gravity="left |top"
-        tools:ignore="RtlHardcoded">
         <TextView
             android:id="@+id/txt_duration"
             android:layout_width="wrap_content"
@@ -49,6 +34,14 @@
             android:paddingEnd="4dp"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium"
             android:textColor="@color/white"
-            tools:text="00:01:25" />
+            tools:text="00:00:00" />
+        <CheckBox
+            android:id="@+id/cb_is_show_preview"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:text="Show Preview"
+            android:textColor="@color/white"
+            android:checked="true"
+            android:buttonTint="@color/secondary_color"/>
     </LinearLayout>
 </RelativeLayout>

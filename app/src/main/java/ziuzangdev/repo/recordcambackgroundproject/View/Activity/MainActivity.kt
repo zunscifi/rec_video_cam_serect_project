@@ -76,7 +76,7 @@ class MainActivity : AppCompatActivity(){
             }
         }
 
-        viewBinding.cbIsShowPreview.setOnCheckedChangeListener { buttonView, isChecked ->
+        viewBinding.cbIsShowPreview.setOnCheckedChangeListener { _, isChecked ->
             settingProvider?.saveSetting(SettingLogic.SETTING_IS_SHOW_PREVIEW, isChecked.toString())
         }
     }
@@ -90,6 +90,7 @@ class MainActivity : AppCompatActivity(){
     private fun initDefaultValue() {
         val isShowPreview = settingProvider?.loadSetting(SettingLogic.SETTING_IS_SHOW_PREVIEW)?.settingValue.toBoolean()
         viewBinding.cbIsShowPreview.isChecked = isShowPreview
+        viewBinding.txtDuration.text = "00:00:00"
     }
 
     private fun initSettingProvider() {

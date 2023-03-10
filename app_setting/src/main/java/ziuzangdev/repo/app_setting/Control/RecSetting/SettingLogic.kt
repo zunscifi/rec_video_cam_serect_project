@@ -7,7 +7,10 @@ import ziuzangdev.repo.app_setting.R
 object SettingLogic {
     const val SETTING_IS_SHOW_PREVIEW = "SETTING_NAME_1"
     const val SETTING_CAMERA_USING = "SETTING_NAME_2"
-
+    const val SETTING_CAMERA_RESOLUTION = "SETTING_NAME_3"
+    const val SETTING_CAMERA = "SETTING_NAME_4"
+    const val SETTING_PREVIEW_SIZE = "SETTING_NAME_5"
+    const val SETTING_SAVE_PATH = "SETTING_NAME_6"
     fun saveSetting(context: Context, setting: SettingModel) {
         val sharedPreferences =
             context.getSharedPreferences(context.getString(R.string.appsettings_name_sharedpref), Context.MODE_PRIVATE)

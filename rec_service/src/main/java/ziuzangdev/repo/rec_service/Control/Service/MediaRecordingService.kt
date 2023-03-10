@@ -6,6 +6,7 @@ import android.app.Activity
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.content.BroadcastReceiver
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
@@ -34,13 +35,16 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.TaskStackBuilder
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleService
+import ziuzangdev.repo.app_setting.Control.RecSetting.SettingLogic
+import ziuzangdev.repo.app_setting.Control.RecSetting.SettingProvider
+import ziuzangdev.repo.rec_service.R
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.Timer
 import java.util.TimerTask
 
 class MediaRecordingService : LifecycleService() {
-
+    private var settingProvider : SettingProvider = SettingProvider(this)
     companion object {
         const val CHANNEL_ID: String = "media_recorder_service"
         private val TAG = MediaRecordingService::class.simpleName
@@ -74,6 +78,12 @@ class MediaRecordingService : LifecycleService() {
     private var isSoundEnabled: Boolean = true
      private var handler: Handler? = null
      private var isServiceRunning = false
+    private var notificationBuilder: NotificationCompat.Builder? = null
+    private var notificationManager: NotificationManager? = null
+
+    fun unBindAll(){
+        cameraProvider?.unbindAll()
+    }
     override fun onCreate() {
         super.onCreate()
         recordingServiceBinder = RecordingServiceBinder(this)
@@ -85,13 +95,16 @@ class MediaRecordingService : LifecycleService() {
         when(intent?.action) {
             ACTION_START_WITH_PREVIEW -> {
                 if (cameraProvider == null) {
+                    Log.i(TAG, "Camera provider is not initialized yet. Adding action to pending actions.")
                     initializeCamera()
                 }
             }
         }
         return START_NOT_STICKY
     }
-
+    fun setCameraProvider(){
+        cameraProvider = null
+    }
     private fun initializeCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
         cameraProviderFuture.addListener({
@@ -103,13 +116,26 @@ class MediaRecordingService : LifecycleService() {
                 .build()
             videoCapture = withOutput(recorder)
             // Select back camera as a default
-            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-
+            var cameraSelector : CameraSelector? = null
+            try{
+                val settingValue = settingProvider.loadSetting(SettingLogic.SETTING_CAMERA).settingValue
+                println("CAMERAAAAAAAA $settingValue")
+                if(settingValue == "CAMERA_FRONT") {
+                    cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+                }else{
+                    cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+                }
+            }catch (e : Exception){
+                cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+                println("HEHEHEH ${e.toString()}")
+            }
             try {
                 // Unbind use cases before rebinding
                 cameraProvider?.unbindAll()
                 // Bind use cases to camera
-                cameraProvider?.bindToLifecycle(this, cameraSelector, videoCapture)
+                if (cameraSelector != null) {
+                    cameraProvider?.bindToLifecycle(this, cameraSelector, videoCapture)
+                }
             } catch(exc: Exception) {
                 Log.e(MediaRecordingService::class.simpleName, "Use case binding failed", exc)
             }
@@ -120,14 +146,46 @@ class MediaRecordingService : LifecycleService() {
     }
 
     private fun getQualitySelector(): QualitySelector {
+        val quality = settingProvider.loadSetting(SettingLogic.SETTING_CAMERA_RESOLUTION).settingValue
+        val qualitySelector : QualitySelector
+        try{
+            when(quality.toInt()){
+                8-> return QualitySelector
+                    .firstTry(QualitySelector.QUALITY_UHD)
+                    .thenTry(QualitySelector.QUALITY_FHD)
+                    .thenTry(QualitySelector.QUALITY_HD)
+                    .finallyTry(
+                        QualitySelector.QUALITY_SD,
+                        QualitySelector.FALLBACK_STRATEGY_LOWER
+                    )
+                6 -> return QualitySelector
+                    .firstTry(QualitySelector.QUALITY_FHD)
+                    .thenTry(QualitySelector.QUALITY_HD)
+                    .finallyTry(
+                        QualitySelector.QUALITY_SD,
+                        QualitySelector.FALLBACK_STRATEGY_LOWER
+                    )
+                5 -> return QualitySelector
+                    .firstTry(QualitySelector.QUALITY_HD)
+                    .finallyTry(
+                        QualitySelector.QUALITY_SD,
+                        QualitySelector.FALLBACK_STRATEGY_LOWER)
+                4 -> return QualitySelector
+                    .firstTry(QualitySelector.QUALITY_SD)
+                    .finallyTry(
+                        QualitySelector.QUALITY_SD,
+                        QualitySelector.FALLBACK_STRATEGY_LOWER)
+            }
+        }catch (e: Exception){
+            Log.e(TAG, "getQualitySelector: ", e)
+        }
         return QualitySelector
             .firstTry(QualitySelector.QUALITY_UHD)
             .thenTry(QualitySelector.QUALITY_FHD)
             .thenTry(QualitySelector.QUALITY_HD)
             .finallyTry(
                 QualitySelector.QUALITY_SD,
-                QualitySelector.FALLBACK_STRATEGY_LOWER
-            )
+                QualitySelector.FALLBACK_STRATEGY_LOWER)
     }
 
     @SuppressLint("MissingPermission")
@@ -140,7 +198,6 @@ class MediaRecordingService : LifecycleService() {
         ) {
             return
         }
-
         var pendingRecording = videoCapture?.output?.prepareRecording(this, mediaStoreOutputOptions)
         if (isSoundEnabled) {
             pendingRecording = pendingRecording?.withAudioEnabled()
@@ -193,8 +250,11 @@ class MediaRecordingService : LifecycleService() {
                     .format(System.currentTimeMillis()) + ".mp4"
         val contentValues = ContentValues().apply {
             put(MediaStore.Video.Media.DISPLAY_NAME, name)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                put(MediaStore.MediaColumns.RELATIVE_PATH, "DCIM/Recorded Videos")
+            val pathSave = settingProvider.loadSetting(SettingLogic.SETTING_SAVE_PATH).settingValue
+            if(pathSave == ""){
+                put(MediaStore.MediaColumns.RELATIVE_PATH, "DCIM/SerectVideo")
+            }else{
+                put(MediaStore.MediaColumns.RELATIVE_PATH, pathSave.replace("/storage/emulated/0/", ""))
             }
         }
         return MediaStoreOutputOptions.Builder(
@@ -222,13 +282,28 @@ class MediaRecordingService : LifecycleService() {
         }
         initPreviewUseCase()
         preview?.setSurfaceProvider(surfaceProvider)
-        val cameraInfo: CameraInfo? = cameraProvider?.bindToLifecycle(
-            this@MediaRecordingService,
-            CameraSelector.DEFAULT_BACK_CAMERA,
-            preview
-        )?.cameraInfo
-        observeCameraState(cameraInfo, this)
+        var cameraSelector : CameraSelector? = null
+        try{
+            val settingValue = settingProvider.loadSetting(SettingLogic.SETTING_CAMERA).settingValue
+            if(settingValue == "CAMERA_FRONT") {
+                cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+            }else{
+                cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+            }
+        }catch (e : Exception){
+            cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+        }
+        try{
+            val cameraInfo: CameraInfo? = cameraProvider?.bindToLifecycle(
+                this@MediaRecordingService,
+                cameraSelector!!,
+                preview
+            )?.cameraInfo
+            observeCameraState(cameraInfo, this)
+        }catch (e : Exception){ }
+
     }
+
 
     private fun initPreviewUseCase() {
         preview?.setSurfaceProvider(null)
@@ -241,6 +316,7 @@ class MediaRecordingService : LifecycleService() {
         preview?.setSurfaceProvider(null)
     }
 
+
     fun startRunningInForeground(activityClass: Class<*>) {
         val parentStack = TaskStackBuilder.create(this)
             .addNextIntentWithParentStack(Intent(this, activityClass))
@@ -249,17 +325,31 @@ class MediaRecordingService : LifecycleService() {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_DEFAULT)
-            val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            nm.createNotificationChannel(channel)
+            notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager?.createNotificationChannel(channel)
         }
 
-        val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Video Recording...")
+        // Create the notification builder and store it in the property
+        notificationBuilder = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("Video Are Recording...")
+            .setContentText("")
+            .setSmallIcon(R.drawable.icon_rec_video_recording)
             .setContentIntent(pendingIntent1)
-            .build()
-        startForeground(ONGOING_NOTIFICATION_ID, notification)
-    }
 
+        // Build the notification and start foreground service
+        val notification: Notification = notificationBuilder!!.build()
+        startForeground(ONGOING_NOTIFICATION_ID, notification)
+
+        // Create and send the broadcast to update the notification
+    }
+    fun updateNotificationDescription(description: String) {
+        // Update the content text of the notification builder
+        notificationBuilder?.setContentText(description)
+
+        // Build the updated notification and notify the manager to update the notification
+        val updatedNotification = notificationBuilder?.build()
+        notificationManager?.notify(ONGOING_NOTIFICATION_ID, updatedNotification)
+    }
     fun isSoundEnabled(): Boolean {
         return isSoundEnabled
     }
@@ -274,6 +364,9 @@ class MediaRecordingService : LifecycleService() {
         activeRecording?.stop()
         timerTask?.cancel()
         isServiceRunning = false
+        cameraProvider?.unbindAll()
+        cameraProvider = null
+        stopSelf()
     }
 
     override fun onBind(intent: Intent): IBinder {
@@ -375,4 +468,19 @@ class MediaRecordingService : LifecycleService() {
         fun onRecordingState(it: RecordingState?)
     }
 
+    class NotificationUpdateReceiver : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            // Get the description string from the intent
+            val description = intent?.getStringExtra("description")
+
+            // Update the notification
+            val notificationManager =
+                context?.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val builder = NotificationCompat.Builder(context, CHANNEL_ID)
+                .setContentTitle("Video Are Recording...")
+                .setContentText(description)
+            val notification = builder.build()
+            notificationManager.notify(ONGOING_NOTIFICATION_ID, notification)
+        }
+    }
 }

@@ -24,11 +24,26 @@ import ziuzangdev.repo.rec_service.Control.Service.MRSProvider
 import ziuzangdev.repo.rec_service.Control.Service.MediaRecordingService
 import ziuzangdev.repo.recordcambackgroundproject.databinding.ActivityMainBinding
 
-class MainActivity : AppCompatActivity(){
+import android.content.ContentUris
+import android.net.Uri
+import android.os.Environment
+import android.os.Environment.getExternalStoragePublicDirectory
+import android.provider.MediaStore
+import android.provider.MediaStore.Video.Media.*
+import androidx.camera.core.CameraSelector
+import androidx.camera.video.QualitySelector
+import nl.invissvenska.modalbottomsheetdialog.Item
+import nl.invissvenska.modalbottomsheetdialog.ModalBottomSheetDialog
+import ziuzangdev.repo.recordcambackgroundproject.R
+import java.io.File
+import java.lang.StringBuilder
+import java.util.Locale
+
+class MainActivity : AppCompatActivity(), ModalBottomSheetDialog.Listener{
     private lateinit var viewBinding: ActivityMainBinding
     private var mrsProvider: MRSProvider? = null
     private var settingProvider : SettingProvider? = null
-
+    private lateinit var modalBottomSheetDialog : ModalBottomSheetDialog
     // Handle permission result
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
@@ -61,13 +76,17 @@ class MainActivity : AppCompatActivity(){
 
     override fun onResume() {
         super.onResume()
-
+        reloadSettup()
     }
     override fun onStop() {
         super.onStop()
         mrsProvider?.onStopApp()
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        mrsProvider?.onStopApp()
+    }
     private fun addEvents() {
         viewBinding.btnRecord.setOnClickListener(){
            val isStartRecord = mrsProvider?.onPauseRecordClicked()
@@ -79,6 +98,19 @@ class MainActivity : AppCompatActivity(){
         viewBinding.cbIsShowPreview.setOnCheckedChangeListener { _, isChecked ->
             settingProvider?.saveSetting(SettingLogic.SETTING_IS_SHOW_PREVIEW, isChecked.toString())
         }
+
+        viewBinding.imgbtnVideoManager.setOnClickListener(){
+            val intent: Intent = Intent(this@MainActivity, VideoManagerActivity::class.java)
+            startActivity(intent)
+            overridePendingTransition(0, 0)
+        }
+
+        viewBinding.imgbtnSettingBottomDialog.setOnClickListener(){
+            val intent = Intent(this@MainActivity, SettingActivity::class.java)
+            startActivity(intent)
+            overridePendingTransition(0, 0)
+        }
+
     }
 
     private fun addControls() {
@@ -91,6 +123,23 @@ class MainActivity : AppCompatActivity(){
         val isShowPreview = settingProvider?.loadSetting(SettingLogic.SETTING_IS_SHOW_PREVIEW)?.settingValue.toBoolean()
         viewBinding.cbIsShowPreview.isChecked = isShowPreview
         viewBinding.txtDuration.text = "00:00:00"
+        val inforStr = StringBuilder()
+        val settingValue = settingProvider?.loadSetting(SettingLogic.SETTING_CAMERA)?.settingValue
+        if(settingValue == "CAMERA_FRONT") {
+            inforStr.append("Front Camera")
+        }else{
+            inforStr.append("Back Camera")
+        }
+        inforStr.append(" - ")
+        val quality = settingProvider?.loadSetting(SettingLogic.SETTING_CAMERA_RESOLUTION)?.settingValue
+        when(quality){
+            "8" -> inforStr.append("UHD")
+            "6" -> inforStr.append("FHD")
+            "5" -> inforStr.append("HD")
+            "4" -> inforStr.append("SD")
+            "" -> inforStr.append("UHD")
+        }
+        viewBinding.txtInforCam.text = inforStr.toString().trim().uppercase(Locale.getDefault())
     }
 
     private fun initSettingProvider() {
@@ -112,6 +161,88 @@ class MainActivity : AppCompatActivity(){
             ActivityCompat.requestPermissions(this, MRSProvider.CAMERA_PERMISSION_FROM30, MRSProvider.CAMERA_PERMISSION_REQUEST_CODE)
         }else{
             ActivityCompat.requestPermissions(this, MRSProvider.CAMERA_PERMISSION_LOW30, MRSProvider.CAMERA_PERMISSION_REQUEST_CODE)
+        }
+    }
+    override fun onItemSelected(tag: String?, item: Item?) {
+            modalBottomSheetDialog.dismiss()
+            if(item?.id   == R.id.action_quality){
+                openQuality()
+                modalBottomSheetDialog.show(supportFragmentManager, "Setting")
+            }else if(item?.id  == R.id.action_camera){
+                openCamera()
+                modalBottomSheetDialog.show(supportFragmentManager, "Setting")
+            }else if(item?.id == R.id.DEFAULT_BACK_CAMERA){
+                settingProvider?.saveSetting(SettingLogic.SETTING_CAMERA, "CAMERA_BLACK")
+                reloadSettup()
+            }else if(item?.id == R.id.DEFAULT_FRONT_CAMERA){
+                settingProvider?.saveSetting(SettingLogic.SETTING_CAMERA, "CAMERA_FRONT")
+                reloadSettup()
+            }else if(item?.id == R.id.QUALITY_UHD){
+                settingProvider?.saveSetting(SettingLogic.SETTING_CAMERA_RESOLUTION, QualitySelector.QUALITY_UHD.toString())
+                reloadSettup()
+            }
+            else if(item?.id == R.id.QUALITY_FHD){
+                settingProvider?.saveSetting(SettingLogic.SETTING_CAMERA_RESOLUTION, QualitySelector.QUALITY_FHD.toString())
+                reloadSettup()
+            }
+            else if(item?.id == R.id.QUALITY_HD){
+                settingProvider?.saveSetting(SettingLogic.SETTING_CAMERA_RESOLUTION, QualitySelector.QUALITY_HD.toString())
+                reloadSettup()
+            }
+            else if(item?.id == R.id.QUALITY_SD){
+                settingProvider?.saveSetting(SettingLogic.SETTING_CAMERA_RESOLUTION, QualitySelector.QUALITY_SD.toString())
+                reloadSettup()
+            }
+    }
+
+    private fun openCamera() {
+        modalBottomSheetDialog.dismiss()
+        modalBottomSheetDialog = ModalBottomSheetDialog.Builder()
+            .setHeader("Camera Selector")
+            .add(R.menu.setting_camera)
+            .setRoundedModal(true)
+            .setHeaderLayout(R.layout.setting_dialog_header)
+            .setItemLayout(R.layout.setting_dialog_item)
+            .build()
+        if(!modalBottomSheetDialog.isAdded){
+            modalBottomSheetDialog.show(supportFragmentManager, "Setting")
+        }else{
+        }
+    }
+    private fun openSetting(){
+        modalBottomSheetDialog = ModalBottomSheetDialog.Builder()
+            .setHeader("Setting")
+            .add(R.menu.setting)
+            .setRoundedModal(true)
+            .setHeaderLayout(R.layout.setting_dialog_header)
+            .setItemLayout(R.layout.setting_dialog_item)
+            .build()
+        if(!modalBottomSheetDialog.isAdded){
+            modalBottomSheetDialog.show(supportFragmentManager, "Setting")
+        }else{
+        }
+    }
+    private fun openQuality() {
+        modalBottomSheetDialog = ModalBottomSheetDialog.Builder()
+            .setHeader("Quality Selector")
+            .add(R.menu.setting_quality)
+            .setRoundedModal(true)
+            .setHeaderLayout(R.layout.setting_dialog_header)
+            .setItemLayout(R.layout.setting_dialog_item)
+            .build()
+        if(!modalBottomSheetDialog.isAdded){
+            modalBottomSheetDialog.show(supportFragmentManager, "Setting")
+        }else{
+        }
+    }
+
+    private fun reloadSettup(){
+        initDefaultValue()
+        mrsProvider?.un_bindService()
+        mrsProvider?.bindService()
+        val isStartRecord = mrsProvider?.onPauseRecordClicked()
+        if(isStartRecord == false){
+            initMRSProvider()
         }
     }
 }

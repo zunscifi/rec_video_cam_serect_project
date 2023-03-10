@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/PREVIEW_SIZE_SMALL"
+        android:title="SMALL"
+        android:icon="@drawable/baseline_preview_24"/>
+    <item
+        android:id="@+id/PREVIEW_SIZE_MEDIUM"
+        android:title="MEDIUM"
+        android:icon="@drawable/baseline_preview_24"/>
+    <item
+        android:id="@+id/PREVIEW_SIZE_LARGE"
+        android:title="LARGE"
+        android:icon="@drawable/baseline_preview_24"/>
+</menu>

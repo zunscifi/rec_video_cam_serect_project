@@ -17,6 +17,45 @@
     </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:orientation="vertical"
+        android:gravity="center |left">
+        <ImageButton
+            android:id="@+id/imgbtn_video_manager"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_weight="0.1"
+            android:background="?selectableItemBackgroundBorderless"
+            android:src="@drawable/baseline_folder_24"/>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:orientation="vertical"
+        android:gravity="center">
+        <TextView
+            android:id="@+id/txt_conversation_name"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:textSize="17sp"
+            android:text="@string/app_name"
+            android:gravity="center"
+            android:textColor="@color/white"/>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal"
+        android:gravity="center |right">
+        <ImageButton
+            android:id="@+id/imgbtn_setting_bottom_dialog"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?selectableItemBackgroundBorderless"
+            android:src="@drawable/baseline_settings_suggest_24"/>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:gravity="center">
@@ -35,10 +74,20 @@
             android:textAppearance="@style/TextAppearance.AppCompat.Medium"
             android:textColor="@color/white"
             tools:text="00:00:00" />
+        <TextView
+            android:id="@+id/txt_infor_cam"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
+            android:textSize="15sp"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            android:textColor="@color/white"
+            tools:text="FRONT CAMERA - UHD" />
         <CheckBox
             android:id="@+id/cb_is_show_preview"
             android:layout_width="wrap_content"
-            android:layout_height="50dp"
+            android:layout_height="wrap_content"
             android:text="Show Preview"
             android:textColor="@color/white"
             android:checked="true"

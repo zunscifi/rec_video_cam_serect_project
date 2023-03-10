@@ -43,10 +43,12 @@ class MRSProvider(
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             recordingService = (service as MediaRecordingService.RecordingServiceBinder).getService()
             onServiceBound(recordingService)
+            Log.i("MRSProvider", "onServiceConnected: ")
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
-
+            recordingService = null
+            Log.i("MRSProvider", "onServiceDisconnected: ")
         }
     }
 
@@ -85,11 +87,19 @@ class MRSProvider(
         recordingService?.unbindPreview()
         recordingService?.removeListener(this)
     }
+    fun unBindAll(){
+        recordingService?.unBindAll()
+    }
     fun bindService() {
         val intent = Intent(context, MediaRecordingService::class.java)
         intent.action = MediaRecordingService.ACTION_START_WITH_PREVIEW
         context.startService(intent)
         context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+    }
+    fun un_bindService() {
+        recordingService?.setCameraProvider()
+        context.stopService(Intent(context, MediaRecordingService::class.java))
+        recordingService = null
     }
     fun onPauseRecordClicked() : Boolean {
         when(recordingService?.getRecordingState()){
@@ -185,8 +195,8 @@ class MRSProvider(
     }
     companion object {
         const val CAMERA_PERMISSION_REQUEST_CODE = 789
-        private const val MINUTE: Int = 60
-        private const val HOUR: Int = MINUTE * 60
+        const val MINUTE: Int = 60
+        const val HOUR: Int = MINUTE * 60
         val CAMERA_PERMISSION_LOW30 = arrayOf(
             Manifest.permission.CAMERA,
             Manifest.permission.RECORD_AUDIO,

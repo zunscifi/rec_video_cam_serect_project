@@ -1,49 +1,37 @@
 package ziuzangdev.repo.recordcambackgroundproject.View.Activity
 
-import android.annotation.SuppressLint
-import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
-import android.content.ServiceConnection
-import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.IBinder
-import android.util.Log
+import android.provider.Settings
+import android.view.LayoutInflater
 import android.view.View
+import android.widget.ImageButton
+import android.widget.RelativeLayout
 import android.widget.Toast
-import androidx.camera.video.VideoRecordEvent
+import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.video.QualitySelector
+import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
-import androidx.core.app.ServiceCompat
-import androidx.core.content.ContextCompat
+import nl.invissvenska.modalbottomsheetdialog.Item
+import nl.invissvenska.modalbottomsheetdialog.ModalBottomSheetDialog
 import ziuzangdev.repo.app_setting.Control.RecSetting.SettingLogic
 import ziuzangdev.repo.app_setting.Control.RecSetting.SettingProvider
 import ziuzangdev.repo.rec_service.Control.Service.MRSProvider
 import ziuzangdev.repo.rec_service.Control.Service.MediaRecordingService
-import ziuzangdev.repo.recordcambackgroundproject.databinding.ActivityMainBinding
-
-import android.content.ContentUris
-import android.net.Uri
-import android.os.Environment
-import android.os.Environment.getExternalStoragePublicDirectory
-import android.provider.MediaStore
-import android.provider.MediaStore.Video.Media.*
-import androidx.camera.core.CameraSelector
-import androidx.camera.video.QualitySelector
-import nl.invissvenska.modalbottomsheetdialog.Item
-import nl.invissvenska.modalbottomsheetdialog.ModalBottomSheetDialog
 import ziuzangdev.repo.recordcambackgroundproject.R
-import java.io.File
-import java.lang.StringBuilder
+import ziuzangdev.repo.recordcambackgroundproject.databinding.ActivityMainBinding
 import java.util.Locale
+
 
 class MainActivity : AppCompatActivity(), ModalBottomSheetDialog.Listener{
     private lateinit var viewBinding: ActivityMainBinding
     private var mrsProvider: MRSProvider? = null
     private var settingProvider : SettingProvider? = null
     private lateinit var modalBottomSheetDialog : ModalBottomSheetDialog
+    private val SYSTEM_ALERT_WINDOW_PERMISSION = 2084
     // Handle permission result
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
@@ -64,6 +52,20 @@ class MainActivity : AppCompatActivity(), ModalBottomSheetDialog.Listener{
                 }
             }
         }
+    }
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == SYSTEM_ALERT_WINDOW_PERMISSION) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(this)) {
+                showPreviewOverlay()
+            } else {
+                // Permission not granted, handle accordingly
+            }
+        }
+    }
+
+    private fun showPreviewOverlay() {
+        settingProvider?.saveSetting(SettingLogic.SETTING_IS_SHOW_PREVIEW, "true")
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -91,14 +93,24 @@ class MainActivity : AppCompatActivity(), ModalBottomSheetDialog.Listener{
         viewBinding.btnRecord.setOnClickListener(){
            val isStartRecord = mrsProvider?.onPauseRecordClicked()
             if(isStartRecord == false){
-                initMRSProvider()
+                reloadSettupForStopRecord()
             }
         }
 
-        viewBinding.cbIsShowPreview.setOnCheckedChangeListener { _, isChecked ->
-            settingProvider?.saveSetting(SettingLogic.SETTING_IS_SHOW_PREVIEW, isChecked.toString())
+        viewBinding.cbIsShowPreview.setOnClickListener(){
+            if(viewBinding.cbIsShowPreview.isChecked){
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+                    if(!checkPermisionOverlayScreen()){
+                        viewBinding.cbIsShowPreview.isChecked = false
+                    }
+                }else{
+                    showPreviewOverlay()
+                }
+            }else{
+                settingProvider?.saveSetting(SettingLogic.SETTING_IS_SHOW_PREVIEW, "false")
+            }
+            reloadSettup()
         }
-
         viewBinding.imgbtnVideoManager.setOnClickListener(){
             val intent: Intent = Intent(this@MainActivity, VideoManagerActivity::class.java)
             startActivity(intent)
@@ -147,8 +159,18 @@ class MainActivity : AppCompatActivity(), ModalBottomSheetDialog.Listener{
     }
 
     private fun initMRSProvider() {
-        mrsProvider = MRSProvider(this@MainActivity, MainActivity::class.java,
-            viewBinding.previewContainer, viewBinding.txtDuration, viewBinding.btnRecord)
+        val inflater = LayoutInflater.from(this@MainActivity)
+        val removeView = inflater.inflate(R.layout.item_preview_overlay, null) as RelativeLayout
+        val removeImg = removeView.findViewById<View>(R.id.preview_container) as PreviewView
+        val openApp = removeView.findViewById<View>(R.id.imgbtn_open_app) as ImageButton
+        val isShowPreview = settingProvider?.loadSetting(SettingLogic.SETTING_IS_SHOW_PREVIEW)?.settingValue.toBoolean()
+        if(isShowPreview){
+            mrsProvider = MRSProvider(this@MainActivity, MainActivity::class.java,
+                removeImg, viewBinding.txtDuration, viewBinding.btnRecord, removeView, openApp, viewBinding.cbIsShowPreview)
+        }else{
+            mrsProvider = MRSProvider(this@MainActivity, MainActivity::class.java,
+                viewBinding.previewContainer, viewBinding.txtDuration, viewBinding.btnRecord, removeView, openApp, viewBinding.cbIsShowPreview)
+        }
         if(mrsProvider?.requirePermission() == true){
             mrsProvider?.bindService()
         }else{
@@ -156,11 +178,29 @@ class MainActivity : AppCompatActivity(), ModalBottomSheetDialog.Listener{
         }
     }
 
+    private fun checkPermisionOverlayScreen() : Boolean{
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this@MainActivity)) {
+           requestPermissionOverlayScreen()
+            return false
+        } else {
+            showPreviewOverlay()
+            return true
+        }
+    }
     private fun requestPermissions() {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.R){
             ActivityCompat.requestPermissions(this, MRSProvider.CAMERA_PERMISSION_FROM30, MRSProvider.CAMERA_PERMISSION_REQUEST_CODE)
         }else{
             ActivityCompat.requestPermissions(this, MRSProvider.CAMERA_PERMISSION_LOW30, MRSProvider.CAMERA_PERMISSION_REQUEST_CODE)
+        }
+    }
+
+    private fun requestPermissionOverlayScreen(){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+            val intent = Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:" + packageName))
+            startActivityForResult(intent, SYSTEM_ALERT_WINDOW_PERMISSION)
         }
     }
     override fun onItemSelected(tag: String?, item: Item?) {
@@ -237,12 +277,25 @@ class MainActivity : AppCompatActivity(), ModalBottomSheetDialog.Listener{
     }
 
     private fun reloadSettup(){
-        initDefaultValue()
-        mrsProvider?.un_bindService()
-        mrsProvider?.bindService()
-        val isStartRecord = mrsProvider?.onPauseRecordClicked()
-        if(isStartRecord == false){
-            initMRSProvider()
+        Toast.makeText(this@MainActivity, mrsProvider?.getRecordService()?.getRecordingState().toString(), Toast.LENGTH_SHORT).show()
+        if(mrsProvider?.getRecordService()?.getRecordingState()  != MediaRecordingService.RecordingState.RECORDING){
+            initDefaultValue()
+            mrsProvider?.un_bindService()
+            mrsProvider?.bindService()
+            val isStartRecord = mrsProvider?.onPauseRecordClicked()
+            if(isStartRecord == false){
+                initMRSProvider()
+            }
         }
+    }
+    private fun reloadSettupForStopRecord(){
+        Toast.makeText(this@MainActivity, mrsProvider?.getRecordService()?.getRecordingState().toString(), Toast.LENGTH_SHORT).show()
+            initDefaultValue()
+            mrsProvider?.un_bindService()
+            mrsProvider?.bindService()
+            val isStartRecord = mrsProvider?.onPauseRecordClicked()
+            if(isStartRecord == false){
+                initMRSProvider()
+            }
     }
 }

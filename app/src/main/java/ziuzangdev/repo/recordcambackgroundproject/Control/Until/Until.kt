@@ -3,11 +3,25 @@ package ziuzangdev.repo.recordcambackgroundproject.Control.Until
 import android.content.Context
 import android.net.Uri
 import android.provider.MediaStore
+import android.view.View
 import ziuzangdev.repo.app_setting.Control.RecSetting.SettingLogic
 import ziuzangdev.repo.app_setting.Control.RecSetting.SettingProvider
 import java.io.File
 
 object Until {
+    fun changeViewSizeInDp(view: View, widthDp: Int, heightDp: Int) : View {
+        val density = view.context.resources.displayMetrics.density
+        val widthPx = (widthDp * density).toInt()
+        val heightPx = (heightDp * density).toInt()
+
+        val layoutParams = view.layoutParams
+        layoutParams.width = widthPx
+        layoutParams.height = heightPx
+        view.layoutParams = layoutParams
+
+        return view;
+    }
+
     fun getAllFilesVideo(context: Context): List<File> {
         val settingProvider = SettingProvider(context)
         val pathSave = settingProvider.loadSetting(SettingLogic.SETTING_SAVE_PATH).settingValue

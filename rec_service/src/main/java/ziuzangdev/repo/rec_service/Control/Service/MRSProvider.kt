@@ -8,32 +8,31 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.Build
-import android.os.Handler
 import android.os.IBinder
-import android.os.Looper
 import android.util.Log
+import android.widget.CheckBox
 import android.widget.ImageButton
+import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.video.VideoRecordEvent
 import androidx.camera.view.PreviewView
-import androidx.core.app.ActivityCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import ziuzangdev.repo.app_setting.Control.RecSetting.SettingLogic
 import ziuzangdev.repo.app_setting.Control.RecSetting.SettingProvider
 import ziuzangdev.repo.rec_service.R
-import java.util.Calendar.HOUR
-import java.util.Calendar.MINUTE
 
 class MRSProvider(
     private val context: Context,
     private val activityClass: Class<*>,
     private val previewView: PreviewView,
     private val txtDuration: TextView,
-    private val btnRecord : ImageButton
+    private val btnRecord: ImageButton,
+    private val removeView: RelativeLayout,
+    private val openApp: ImageButton,
+    private val cbIsShowPreview: CheckBox
 ) : MediaRecordingService.DataListener {
     private var recordingService: MediaRecordingService? = null
     private var isReverseLandscape: Boolean = false
@@ -55,11 +54,17 @@ class MRSProvider(
     init {
         settingProvider = SettingProvider(context)
     }
+
+
+    fun getRecordService() : MediaRecordingService? {
+        return recordingService
+    }
     private fun onServiceBound(recordingService: MediaRecordingService?) {
         when(recordingService?.getRecordingState()){
             MediaRecordingService.RecordingState.RECORDING -> {
 //                viewBinding.viewRecordPause.setBackgroundResource(R.drawable.ic_baseline_stop_24)
 //                viewBinding.btnMute.visibility = View.INVISIBLE
+                btnRecord.setImageResource(R.drawable.icon_rec_video_recording)
             }
             MediaRecordingService.RecordingState.STOPPED -> {
 //                viewBinding.viewRecordPause.setBackgroundResource(R.drawable.ic_videocam_24)
@@ -104,12 +109,22 @@ class MRSProvider(
     fun onPauseRecordClicked() : Boolean {
         when(recordingService?.getRecordingState()){
             MediaRecordingService.RecordingState.RECORDING -> {
+                cbIsShowPreview.isEnabled = true
+                cbIsShowPreview.isClickable = true
                 recordingService?.stopRecording()
+                recordingService?.removeBubblePreviewCam()
+                //Toast.makeText(context, "Video saved", Toast.LENGTH_SHORT).show()
                 return false
 
             }
             MediaRecordingService.RecordingState.STOPPED -> {
-                recordingService?.startRecording()
+                cbIsShowPreview.isEnabled = false
+                cbIsShowPreview.isClickable = false
+                recordingService?.startRecording(previewView)
+                val isShowPreview = settingProvider?.loadSetting(SettingLogic.SETTING_IS_SHOW_PREVIEW)?.settingValue.toBoolean()
+                if(isShowPreview){
+                    recordingService?.initializeBubblePreviewCam(removeView, previewView, activityClass, openApp)
+                }
                 return true
             }
             else -> {
@@ -161,21 +176,20 @@ class MRSProvider(
         if(isGrantedPermission){
             when (it) {
                 is VideoRecordEvent.Start -> {
-                    Toast.makeText(context, "Start recording, you can close app, app still recording ...", Toast.LENGTH_SHORT).show()
+
                 }
                 is VideoRecordEvent.Finalize -> {
                     recordingService?.isSoundEnabled()?.let {
 
                     }
                     btnRecord.setImageResource(R.drawable.icon_rec_video)
-                    Toast.makeText(context, "Recording video completed!", Toast.LENGTH_SHORT).show()
                     onNewData(0)
-                    val isShowPreview = settingProvider?.loadSetting(SettingLogic.SETTING_IS_SHOW_PREVIEW)?.settingValue.toBoolean()
-                    if(isShowPreview){
-                        val intent = Intent(Intent.ACTION_VIEW, it.outputResults.outputUri)
-                        intent.setDataAndType(it.outputResults.outputUri, "video/mp4")
-                        context.startActivity(Intent.createChooser(intent, "Open recorded video"))
-                    }
+//                    val isShowPreview = settingProvider?.loadSetting(SettingLogic.SETTING_IS_SHOW_PREVIEW)?.settingValue.toBoolean()
+//                    if(isShowPreview){
+//                        val intent = Intent(Intent.ACTION_VIEW, it.outputResults.outputUri)
+//                        intent.setDataAndType(it.outputResults.outputUri, "video/mp4")
+//                        context.startActivity(Intent.createChooser(intent, "Open recorded video"))
+//                    }
                 }
             }
         }
@@ -184,6 +198,11 @@ class MRSProvider(
     override fun onRecordingState(it: MediaRecordingService.RecordingState?) {
         if(it == MediaRecordingService.RecordingState.RECORDING){
             btnRecord.setImageResource(R.drawable.icon_rec_video_recording)
+            cbIsShowPreview.isEnabled = false
+            cbIsShowPreview.isClickable = false
+        }else{
+            cbIsShowPreview.isEnabled = true
+            cbIsShowPreview.isClickable = true
         }
     }
 

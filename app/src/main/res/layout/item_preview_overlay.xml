@@ -25,7 +25,7 @@
             android:layout_marginEnd="5dp"
             android:layout_marginBottom="5dp"
             android:background="?selectableItemBackgroundBorderless"
-            android:src="@drawable/baseline_remove_red_eye_24" />
+            android:src="@drawable/baseline_close_24" />
 
     </RelativeLayout>
 </RelativeLayout>

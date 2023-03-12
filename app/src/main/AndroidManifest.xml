@@ -35,13 +35,18 @@
         android:theme="@style/Theme.RecordCamBackgroundProject"
         tools:targetApi="31">
         <activity
+            android:name=".View.Activity.AppBackgroundPickerActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Diary.NoActionBar" />
+        <activity
             android:name=".View.Activity.SendBroadcastRecordActivity"
             android:exported="true"
-            android:theme="@android:style/Theme.NoDisplay"/>
+            android:theme="@android:style/Theme.NoDisplay" />
         <activity
             android:name="com.app.imagepickerlibrary.ui.activity.ImagePickerActivity"
             android:configChanges="orientation|screenSize"
             android:theme="@style/SSImagePicker" />
+
         <receiver
             android:name=".Control.BroadcastReceive.ShortcutRecordReceiver"
             android:exported="true"

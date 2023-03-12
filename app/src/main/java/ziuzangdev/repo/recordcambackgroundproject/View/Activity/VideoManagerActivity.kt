@@ -49,34 +49,47 @@ class VideoManagerActivity : AppCompatActivity() {
 
         viewBinding.imgbtnDelete.setOnClickListener {
             viewBinding.llDeleteProcess.visibility = View.VISIBLE
-            var count = 0
-            for (i in 0 until videoList.size) {
-                if ( fileIsChooseToDelete[videoList[i].path] == true) {
-                    count++
+            Thread {
+                runOnUiThread {
+                    viewBinding.txtDeleteProcess.text = "Deleting ..."
                 }
-            }
-            var count2 = 0;
-            viewBinding.txtDeleteProcess.text = "Deleting...0/$count"
-            for (i in 0 until videoList.size) {
-                if ( fileIsChooseToDelete[videoList[i].path] == true) {
-                    try{
-                       val delete = videoList[i].fileOf?.delete()
-                        if(delete == true){
-                            count2++
-                            viewBinding.txtDeleteProcess.text = "Deleting...$count2/$count"
-                        }
-                    }catch (e: SecurityException){
-                        Toast.makeText(this, "Delete fail: ${e.toString()}", Toast.LENGTH_SHORT).show()
+                var count = 0
+                for (i in 0 until videoList.size) {
+                    if ( fileIsChooseToDelete[videoList[i].path] == true) {
+                        count++
                     }
-
                 }
-            }
-            viewBinding.llDeleteProcess.visibility = View.GONE
-            Toast.makeText(this, "Delete success!", Toast.LENGTH_SHORT).show()
-            val intent = Intent(this@VideoManagerActivity, VideoManagerActivity::class.java)
-            finish()
-            startActivity(intent)
-            overridePendingTransition(0, 0)
+                var count2 = 0;
+                for (i in 0 until videoList.size) {
+                    println(videoList.size)
+                    if ( fileIsChooseToDelete[videoList[i].path] == true) {
+                        println(i)
+                        try{
+                            if(videoList[i].fileOf != null){
+                                count2++
+                                if(Until.delete(this@VideoManagerActivity, videoList[i].fileOf!!)){
+                                    runOnUiThread {
+                                        viewBinding.txtDeleteProcess.text = "Deleting $count2/$count"
+                                    }
+                                }else{
+                                    runOnUiThread {
+                                        viewBinding.txtDeleteProcess.text = "Can't Delete $count2/$count"
+                                    }
+                                }
+                            }
+                        }catch (e: SecurityException){
+                        }
+                    }
+                }
+                runOnUiThread {
+                    viewBinding.llDeleteProcess.visibility = View.GONE
+                    viewBinding.txtDeleteProcess.text = "Loading ..."
+                    val intent = Intent(this@VideoManagerActivity, VideoManagerActivity::class.java)
+                    finish()
+                    startActivity(intent)
+                    overridePendingTransition(0, 0)
+                }
+            }.start()
         }
 
         viewBinding.imgbtnMultipSelect.setOnClickListener {
@@ -89,8 +102,22 @@ class VideoManagerActivity : AppCompatActivity() {
     }
 
     private fun addControls() {
-        initData()
-        initLiveAdapter()
+        initRecycleView()
+    }
+
+    private fun initRecycleView() {
+        //Create Thread and run
+        Thread {
+            runOnUiThread {
+                viewBinding.llDeleteProcess.visibility = View.VISIBLE
+            }
+            initData()
+            runOnUiThread {
+                viewBinding.llDeleteProcess.visibility = View.GONE
+                viewBinding.txtDeleteProcess.text = "Loading ..."
+                initLiveAdapter()
+            }
+        }.start()
     }
 
     private fun initLiveAdapter() {
@@ -143,10 +170,13 @@ class VideoManagerActivity : AppCompatActivity() {
         intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
         startActivity(intent)
     }
+
     private fun initData() {
+        viewBinding.txtDeleteProcess.text = "Getting video ..."
         videoList = ArrayList()
         fileIsChooseToDelete = Hashtable()
         val videoListTemp = Until.getAllFilesVideo(this@VideoManagerActivity)
+        viewBinding.txtDeleteProcess.text = "Loading video ... [0/${videoListTemp.size}]"
         for(video in videoListTemp){
             try{
                 val videoData = VideoData(video)
@@ -155,7 +185,9 @@ class VideoManagerActivity : AppCompatActivity() {
             }catch (e : Exception){
                 println("error: ${e.toString()}")
             }
+            viewBinding.txtDeleteProcess.text = "Loading video ... [${videoList.size}/${videoListTemp.size}]"
         }
         videoList.reverse()
+        viewBinding.txtDeleteProcess.text = "Complete!"
     }
 }

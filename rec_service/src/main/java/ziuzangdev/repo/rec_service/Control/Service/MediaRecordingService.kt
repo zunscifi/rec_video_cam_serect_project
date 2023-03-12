@@ -136,88 +136,100 @@ class MediaRecordingService : LifecycleService() {
         activityClass: Class<*>,
         openApp: ImageButton
     ) {
-        val isShowPreview = settingProvider.loadSetting(SettingLogic.SETTING_IS_SHOW_PREVIEW).settingValue.toBoolean()
-        if(isShowPreview){
-            if(cameraSelector != null){
-                this.activityClass = activityClass
-                removeView = removeViewTemp
-                removeImg = removeImgTemp
-                this.openApp = openApp
-                val previewSize = settingProvider.loadSetting(SettingLogic.SETTING_PREVIEW_SIZE).settingValue
-                when(previewSize){
-                    "SMALL" -> removeImg = changeViewSizeInDp(removeImg!!, 50, 100) as PreviewView
-                    "MEDIUM" -> removeImg = changeViewSizeInDp(removeImg!!, 150, 250) as PreviewView
-                    "LARGE" -> removeImg = changeViewSizeInDp(removeImg!!, 250, 350) as PreviewView
-                    "" -> removeImg = changeViewSizeInDp(removeImg!!, 150, 250) as PreviewView
-                }
-                // Create a Preview use case and bind it to the PreviewView
-                val preview = Preview.Builder()
-                    .build()
-                    .also {
-                        it.setSurfaceProvider(removeImg!!.surfaceProvider)
+        try{
+            val isShowPreview = settingProvider.loadSetting(SettingLogic.SETTING_IS_SHOW_PREVIEW).settingValue.toBoolean()
+            if(isShowPreview) {
+                if (cameraSelector != null) {
+                    this.activityClass = activityClass
+                    removeView = removeViewTemp
+                    removeImg = removeImgTemp
+                    this.openApp = openApp
+                    val previewSize =
+                        settingProvider.loadSetting(SettingLogic.SETTING_PREVIEW_SIZE).settingValue
+                    when (previewSize) {
+                        "SMALL" -> removeImg =
+                            changeViewSizeInDp(removeImg!!, 50, 100) as PreviewView
+
+                        "MEDIUM" -> removeImg =
+                            changeViewSizeInDp(removeImg!!, 150, 250) as PreviewView
+
+                        "LARGE" -> removeImg =
+                            changeViewSizeInDp(removeImg!!, 250, 350) as PreviewView
+
+                        "" -> removeImg = changeViewSizeInDp(removeImg!!, 150, 250) as PreviewView
                     }
-                try{
-                    cameraProvider?.bindToLifecycle(this, cameraSelector!!, preview)
-                }catch (e : Exception){}
-                windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
-
-                val inflater = getSystemService(LAYOUT_INFLATER_SERVICE) as LayoutInflater
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    LAYOUT_FLAG = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-                } else {
-                    LAYOUT_FLAG = WindowManager.LayoutParams.TYPE_PHONE
-                }
-
-                val paramRemove = WindowManager.LayoutParams(
-                    WindowManager.LayoutParams.WRAP_CONTENT,
-                    WindowManager.LayoutParams.WRAP_CONTENT,
-                    LAYOUT_FLAG,
-                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH or WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-                    PixelFormat.TRANSLUCENT
-                )
-                paramRemove.gravity = Gravity.TOP or Gravity.LEFT
-                windowManager?.addView(removeView, paramRemove); //Ad Remove vIew
-
-                // Set up touch listener to allow removeView to be dragged
-                var initialX: Int? = null
-                var initialY: Int? = null
-                var initialTouchX: Float? = null
-                var initialTouchY: Float? = null
-                removeImg!!.setOnTouchListener { v, event ->
-                    when (event.action) {
-                        MotionEvent.ACTION_DOWN -> {
-                            // Save initial position and touch position
-                            initialX = paramRemove.x
-                            initialY = paramRemove.y
-                            initialTouchX = event.rawX
-                            initialTouchY = event.rawY
+                    // Create a Preview use case and bind it to the PreviewView
+                    val preview = Preview.Builder()
+                        .build()
+                        .also {
+                            it.setSurfaceProvider(removeImg!!.surfaceProvider)
                         }
-
-                        MotionEvent.ACTION_MOVE -> {
-                            // Update removeView position as user moves it
-                            val dx = event.rawX - initialTouchX!!
-                            val dy = event.rawY - initialTouchY!!
-                            paramRemove.x = initialX!! + dx.toInt()
-                            paramRemove.y = initialY!! + dy.toInt()
-                            windowManager?.updateViewLayout(removeView, paramRemove)
-                        }
+                    try {
+                        cameraProvider?.bindToLifecycle(this, cameraSelector!!, preview)
+                    } catch (e: Exception) {
                     }
-                    true
-                }
-                this.openApp.setOnClickListener {
-                    removeView?.visibility = View.GONE
+                    windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+
+                    val inflater = getSystemService(LAYOUT_INFLATER_SERVICE) as LayoutInflater
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        LAYOUT_FLAG = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                    } else {
+                        LAYOUT_FLAG = WindowManager.LayoutParams.TYPE_PHONE
+                    }
+
+                    val paramRemove = WindowManager.LayoutParams(
+                        WindowManager.LayoutParams.WRAP_CONTENT,
+                        WindowManager.LayoutParams.WRAP_CONTENT,
+                        LAYOUT_FLAG,
+                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH or WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                        PixelFormat.TRANSLUCENT
+                    )
+                    paramRemove.gravity = Gravity.TOP or Gravity.LEFT
+                    windowManager?.addView(removeView, paramRemove); //Ad Remove vIew
+
+                    // Set up touch listener to allow removeView to be dragged
+                    var initialX: Int? = null
+                    var initialY: Int? = null
+                    var initialTouchX: Float? = null
+                    var initialTouchY: Float? = null
+                    removeImg!!.setOnTouchListener { v, event ->
+                        when (event.action) {
+                            MotionEvent.ACTION_DOWN -> {
+                                // Save initial position and touch position
+                                initialX = paramRemove.x
+                                initialY = paramRemove.y
+                                initialTouchX = event.rawX
+                                initialTouchY = event.rawY
+                            }
+
+                            MotionEvent.ACTION_MOVE -> {
+                                // Update removeView position as user moves it
+                                val dx = event.rawX - initialTouchX!!
+                                val dy = event.rawY - initialTouchY!!
+                                paramRemove.x = initialX!! + dx.toInt()
+                                paramRemove.y = initialY!! + dy.toInt()
+                                windowManager?.updateViewLayout(removeView, paramRemove)
+                            }
+                        }
+                        true
+                    }
+                    this.openApp.setOnClickListener {
+                        removeView?.visibility = View.GONE
+                    }
                 }
             }
-        }
+        }catch (ignore : Exception){}
     }
 
     fun removeBubblePreviewCam(){
         val isShowPreview = settingProvider.loadSetting(SettingLogic.SETTING_IS_SHOW_PREVIEW).settingValue.toBoolean()
         if(isShowPreview){
-            if(removeView != null){
-                windowManager?.removeView(removeView)
-            }
+            try{
+                if(removeView != null){
+                    windowManager?.removeView(removeView)
+                }
+            }catch (ignore : Exception){}
         }
     }
 
@@ -225,40 +237,42 @@ class MediaRecordingService : LifecycleService() {
         cameraProvider = null
     }
     private fun initializeCamera() {
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
-        cameraProviderFuture.addListener({
-            // Used to bind the lifecycle of cameras to the lifecycle owner
-            cameraProvider = cameraProviderFuture.get()
-            val qualitySelector = getQualitySelector()
-            val recorder = Recorder.Builder()
-                .setQualitySelector(qualitySelector)
-                .build()
-            videoCapture = withOutput(recorder)
-            // Select back camera as a default
-            try{
-                val settingValue = settingProvider.loadSetting(SettingLogic.SETTING_CAMERA).settingValue
-                if(settingValue == "CAMERA_FRONT") {
-                    cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
-                }else{
+        try{
+            val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+            cameraProviderFuture.addListener({
+                // Used to bind the lifecycle of cameras to the lifecycle owner
+                cameraProvider = cameraProviderFuture.get()
+                val qualitySelector = getQualitySelector()
+                val recorder = Recorder.Builder()
+                    .setQualitySelector(qualitySelector)
+                    .build()
+                videoCapture = withOutput(recorder)
+                // Select back camera as a default
+                try{
+                    val settingValue = settingProvider.loadSetting(SettingLogic.SETTING_CAMERA).settingValue
+                    if(settingValue == "CAMERA_FRONT") {
+                        cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+                    }else{
+                        cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+                    }
+                }catch (e : Exception){
                     cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
                 }
-            }catch (e : Exception){
-                cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-            }
-            try {
-                // Unbind use cases before rebinding
-                cameraProvider?.unbindAll()
-                // Bind use cases to camera
-                if (cameraSelector != null) {
+                try {
+                    // Unbind use cases before rebinding
+                    cameraProvider?.unbindAll()
+                    // Bind use cases to camera
+                    if (cameraSelector != null) {
                         cameraProvider?.bindToLifecycle(this, cameraSelector, videoCapture)
+                    }
+                } catch(exc: Exception) {
+                    Log.e(MediaRecordingService::class.simpleName, "Use case binding failed", exc)
                 }
-            } catch(exc: Exception) {
-                Log.e(MediaRecordingService::class.simpleName, "Use case binding failed", exc)
-            }
-            val action = pendingActions[BIND_USECASE]
-            action?.run()
-            pendingActions.remove(BIND_USECASE)
-        }, ContextCompat.getMainExecutor(this))
+                val action = pendingActions[BIND_USECASE]
+                action?.run()
+                pendingActions.remove(BIND_USECASE)
+            }, ContextCompat.getMainExecutor(this))
+        }catch (ignore : Exception){}
     }
 
     private fun getQualitySelector(): QualitySelector {
@@ -306,58 +320,64 @@ class MediaRecordingService : LifecycleService() {
 
     @SuppressLint("MissingPermission")
     fun startRecording(removeImg: PreviewView) {
-        val mediaStoreOutputOptions = createMediaStoreOutputOptions()
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.RECORD_AUDIO
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            return
-        }
-        var pendingRecording = videoCapture?.output?.prepareRecording(this, mediaStoreOutputOptions)
-        if (isSoundEnabled) {
-            pendingRecording = pendingRecording?.withAudioEnabled()
-        }
-        activeRecording = pendingRecording?.withEventListener(ContextCompat.getMainExecutor(this)
-        ) {
-            when (it) {
-                is VideoRecordEvent.Start -> {
-                    startTrackingTime()
-                    recordingState = RecordingState.RECORDING
-                }
+        try{
+            val mediaStoreOutputOptions = createMediaStoreOutputOptions()
+            if (ActivityCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.RECORD_AUDIO
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                return
+            }
+            var pendingRecording = videoCapture?.output?.prepareRecording(this, mediaStoreOutputOptions)
+            if (isSoundEnabled) {
+                pendingRecording = pendingRecording?.withAudioEnabled()
+            }
+            activeRecording = pendingRecording?.withEventListener(ContextCompat.getMainExecutor(this)
+            ) {
+                when (it) {
+                    is VideoRecordEvent.Start -> {
+                        startTrackingTime()
+                        recordingState = RecordingState.RECORDING
+                    }
 
-                is VideoRecordEvent.Finalize -> {
-                    recordingState = RecordingState.STOPPED
-                    duration = 0
-                    timerTask?.cancel()
+                    is VideoRecordEvent.Finalize -> {
+                        recordingState = RecordingState.STOPPED
+                        duration = 0
+                        timerTask?.cancel()
+                    }
+                }
+                for (listener in listeners) {
+                    listener.onRecordingEvent(it)
+                    listener.onRecordingState(getRecordingState())
                 }
             }
-            for (listener in listeners) {
-                listener.onRecordingEvent(it)
-                listener.onRecordingState(getRecordingState())
-            }
-        }
-            ?.start()
-        recordingState = RecordingState.RECORDING
+                ?.start()
+            recordingState = RecordingState.RECORDING
+        }catch (ignore : Exception){}
     }
 
     private fun startTrackingTime() {
-        timerTask = object: TimerTask() {
-            override fun run() {
-                if (recordingState == RecordingState.RECORDING) {
-                    duration += 1
-                    for (listener in listeners) {
-                        listener.onNewData(duration)
+        try{
+            timerTask = object: TimerTask() {
+                override fun run() {
+                    if (recordingState == RecordingState.RECORDING) {
+                        duration += 1
+                        for (listener in listeners) {
+                            listener.onNewData(duration)
+                        }
                     }
                 }
             }
-        }
-        timer.scheduleAtFixedRate(timerTask, 1000, 1000)
+            timer.scheduleAtFixedRate(timerTask, 1000, 1000)
+        }catch (ignore : Exception){}
     }
 
     fun stopRecording() {
-        activeRecording?.stop()
-        activeRecording = null
+        try{
+            activeRecording?.stop()
+            activeRecording = null
+        }catch (ignore : Exception){}
     }
 
     private fun createMediaStoreOutputOptions(): MediaStoreOutputOptions {
@@ -382,54 +402,61 @@ class MediaRecordingService : LifecycleService() {
     }
 
     fun bindPreviewUseCase(surfaceProvider: Preview.SurfaceProvider?) {
-        activeRecording?.pause()
-        if (cameraProvider != null) {
-            bindInternal(surfaceProvider)
-        } else {
-            pendingActions[BIND_USECASE] = Runnable {
+        try{
+            activeRecording?.pause()
+            if (cameraProvider != null) {
                 bindInternal(surfaceProvider)
+            } else {
+                pendingActions[BIND_USECASE] = Runnable {
+                    bindInternal(surfaceProvider)
+                }
             }
-        }
+        }catch (ignore : Exception){}
     }
 
     private fun bindInternal(surfaceProvider: Preview.SurfaceProvider?) {
-        if (preview != null) {
-            cameraProvider?.unbind(preview)
-        }
-        initPreviewUseCase()
-        preview?.setSurfaceProvider(surfaceProvider)
-        var cameraSelector : CameraSelector? = null
         try{
-            val settingValue = settingProvider.loadSetting(SettingLogic.SETTING_CAMERA).settingValue
-            if(settingValue == "CAMERA_FRONT") {
-                cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
-            }else{
+            if (preview != null) {
+                cameraProvider?.unbind(preview)
+            }
+            initPreviewUseCase()
+            preview?.setSurfaceProvider(surfaceProvider)
+            var cameraSelector : CameraSelector? = null
+            try{
+                val settingValue = settingProvider.loadSetting(SettingLogic.SETTING_CAMERA).settingValue
+                if(settingValue == "CAMERA_FRONT") {
+                    cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+                }else{
+                    cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+                }
+            }catch (e : Exception){
                 cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
             }
-        }catch (e : Exception){
-            cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-        }
-        try{
-            val cameraInfo: CameraInfo? = cameraProvider?.bindToLifecycle(
-                this@MediaRecordingService,
-                cameraSelector!!,
-                preview
-            )?.cameraInfo
-            observeCameraState(cameraInfo, this)
-        }catch (e : Exception){ }
-
+            try{
+                val cameraInfo: CameraInfo? = cameraProvider?.bindToLifecycle(
+                    this@MediaRecordingService,
+                    cameraSelector!!,
+                    preview
+                )?.cameraInfo
+                observeCameraState(cameraInfo, this)
+            }catch (e : Exception){ }
+        }catch (ignore : Exception){}
     }
 
 
     private fun initPreviewUseCase() {
-        preview?.setSurfaceProvider(null)
-        preview = Preview.Builder()
-            .build()
+        try{
+            preview?.setSurfaceProvider(null)
+            preview = Preview.Builder()
+                .build()
+        }catch (ignore : Exception){}
     }
 
     fun unbindPreview() {
-        // Just remove the surface provider. I discovered that for some reason if you unbind the Preview usecase the camera willl stop recording the video.
-        preview?.setSurfaceProvider(null)
+        try{
+            // Just remove the surface provider. I discovered that for some reason if you unbind the Preview usecase the camera willl stop recording the video.
+            preview?.setSurfaceProvider(null)
+        }catch (ignore : Exception){}
     }
 
 
@@ -503,77 +530,79 @@ class MediaRecordingService : LifecycleService() {
     }
 
     private fun observeCameraState(cameraInfo: androidx.camera.core.CameraInfo?, context: Context) {
-        cameraInfo?.cameraState?.observe(this) { cameraState ->
-            run {
-                when (cameraState.type) {
-                    CameraState.Type.PENDING_OPEN -> {
-                        // Ask the user to close other camera apps
-                    }
-                    CameraState.Type.OPENING -> {
-                        // Show the Camera UI
-                        for (listener in listeners) {
-                            listener.onCameraOpened()
+        try{
+            cameraInfo?.cameraState?.observe(this) { cameraState ->
+                run {
+                    when (cameraState.type) {
+                        CameraState.Type.PENDING_OPEN -> {
+                            // Ask the user to close other camera apps
+                        }
+                        CameraState.Type.OPENING -> {
+                            // Show the Camera UI
+                            for (listener in listeners) {
+                                listener.onCameraOpened()
+                            }
+                        }
+                        CameraState.Type.OPEN -> {
+                            // Setup Camera resources and begin processing
+                        }
+                        CameraState.Type.CLOSING -> {
+                            // Close camera UI
+                        }
+                        CameraState.Type.CLOSED -> {
+                            // Free camera resources
                         }
                     }
-                    CameraState.Type.OPEN -> {
-                        // Setup Camera resources and begin processing
-                    }
-                    CameraState.Type.CLOSING -> {
-                        // Close camera UI
-                    }
-                    CameraState.Type.CLOSED -> {
-                        // Free camera resources
-                    }
                 }
-            }
 
-            cameraState.error?.let { error ->
-                when (error.code) {
-                    // Open errors
-                    CameraState.ERROR_STREAM_CONFIG -> {
-                        // Make sure to setup the use cases properly
+                cameraState.error?.let { error ->
+                    when (error.code) {
+                        // Open errors
+                        CameraState.ERROR_STREAM_CONFIG -> {
+                            // Make sure to setup the use cases properly
 //                        Toast.makeText(context,
 //                            "Stream config error. Restart application",
 //                            Toast.LENGTH_SHORT).show()
-                    }
-                    // Opening errors
-                    CameraState.ERROR_CAMERA_IN_USE -> {
-                        // Close the camera or ask user to close another camera app that's using the
-                        // camera
-                        Toast.makeText(context,
-                            "Camera in use. Close any apps that are using the camera",
-                            Toast.LENGTH_SHORT).show()
-                    }
-                    CameraState.ERROR_MAX_CAMERAS_IN_USE -> {
-                        // Close another open camera in the app, or ask the user to close another
-                        // camera app that's using the camera
-                    }
-                    CameraState.ERROR_OTHER_RECOVERABLE_ERROR -> {
+                        }
+                        // Opening errors
+                        CameraState.ERROR_CAMERA_IN_USE -> {
+                            // Close the camera or ask user to close another camera app that's using the
+                            // camera
+                            Toast.makeText(context,
+                                "Camera in use. Close any apps that are using the camera",
+                                Toast.LENGTH_SHORT).show()
+                        }
+                        CameraState.ERROR_MAX_CAMERAS_IN_USE -> {
+                            // Close another open camera in the app, or ask the user to close another
+                            // camera app that's using the camera
+                        }
+                        CameraState.ERROR_OTHER_RECOVERABLE_ERROR -> {
 
-                    }
-                    // Closing errors
-                    CameraState.ERROR_CAMERA_DISABLED -> {
-                        // Ask the user to enable the device's cameras
+                        }
+                        // Closing errors
+                        CameraState.ERROR_CAMERA_DISABLED -> {
+                            // Ask the user to enable the device's cameras
 //                        Toast.makeText(context,
 //                            "Camera disabled",
 //                            Toast.LENGTH_SHORT).show()
-                    }
-                    CameraState.ERROR_CAMERA_FATAL_ERROR -> {
-                        // Ask the user to reboot the device to restore camera function
+                        }
+                        CameraState.ERROR_CAMERA_FATAL_ERROR -> {
+                            // Ask the user to reboot the device to restore camera function
 //                        Toast.makeText(context,
 //                            "Fatal error",
 //                            Toast.LENGTH_SHORT).show()
-                    }
-                    // Closed errors
-                    CameraState.ERROR_DO_NOT_DISTURB_MODE_ENABLED -> {
-                        // Ask the user to disable the "Do Not Disturb" mode, then reopen the camera
+                        }
+                        // Closed errors
+                        CameraState.ERROR_DO_NOT_DISTURB_MODE_ENABLED -> {
+                            // Ask the user to disable the "Do Not Disturb" mode, then reopen the camera
 //                        Toast.makeText(context,
 //                            "Do not disturb mode enabled",
 //                            Toast.LENGTH_SHORT).show()
+                        }
                     }
                 }
             }
-        }
+        }catch (ignore : Exception){}
     }
 
     interface DataListener {

@@ -11,6 +11,8 @@ object SettingLogic {
     const val SETTING_CAMERA = "SETTING_NAME_4"
     const val SETTING_PREVIEW_SIZE = "SETTING_NAME_5"
     const val SETTING_SAVE_PATH = "SETTING_NAME_6"
+    const val SETTING_BACKGROUND_IMAGE = "SETTING_NAME_7"
+    const val TIME_OPEN_APP = "SETTING_NAME_8"
     fun saveSetting(context: Context, setting: SettingModel) {
         val sharedPreferences =
             context.getSharedPreferences(context.getString(R.string.appsettings_name_sharedpref), Context.MODE_PRIVATE)

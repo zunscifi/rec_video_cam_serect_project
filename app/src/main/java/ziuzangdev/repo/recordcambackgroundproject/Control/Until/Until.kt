@@ -8,6 +8,7 @@ import ziuzangdev.repo.app_setting.Control.RecSetting.SettingLogic
 import ziuzangdev.repo.app_setting.Control.RecSetting.SettingProvider
 import java.io.File
 
+
 object Until {
     fun changeViewSizeInDp(view: View, widthDp: Int, heightDp: Int) : View {
         val density = view.context.resources.displayMetrics.density
@@ -58,5 +59,19 @@ object Until {
         }
 
         return files
+    }
+    fun delete(context: Context, file: File): Boolean {
+        file.setWritable(true)
+        val where = MediaStore.Images.Media.DATA + "=?"
+        val selectionArgs = arrayOf(
+            file.absolutePath
+        )
+        val contentResolver = context.contentResolver
+        val filesUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+        contentResolver.delete(filesUri, where, selectionArgs)
+        if (file.exists()) {
+            contentResolver.delete(filesUri, where, selectionArgs)
+        }
+        return !file.exists()
     }
 }

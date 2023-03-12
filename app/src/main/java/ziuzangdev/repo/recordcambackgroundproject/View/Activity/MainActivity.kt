@@ -2,36 +2,45 @@ package ziuzangdev.repo.recordcambackgroundproject.View.Activity
 
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.ImageButton
 import android.widget.RelativeLayout
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.video.QualitySelector
 import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
+import androidx.core.net.toUri
+import com.bumptech.glide.Glide
+import guy4444.smartrate.SmartRate
 import nl.invissvenska.modalbottomsheetdialog.Item
 import nl.invissvenska.modalbottomsheetdialog.ModalBottomSheetDialog
 import ziuzangdev.repo.app_setting.Control.RecSetting.SettingLogic
 import ziuzangdev.repo.app_setting.Control.RecSetting.SettingProvider
 import ziuzangdev.repo.rec_service.Control.Service.MRSProvider
 import ziuzangdev.repo.rec_service.Control.Service.MediaRecordingService
+import ziuzangdev.repo.recordcambackgroundproject.Model.MySmartRate
 import ziuzangdev.repo.recordcambackgroundproject.R
 import ziuzangdev.repo.recordcambackgroundproject.databinding.ActivityMainBinding
 import java.util.Locale
 
 
-class MainActivity : AppCompatActivity(), ModalBottomSheetDialog.Listener{
+class MainActivity : AppCompatActivity(), ModalBottomSheetDialog.Listener {
     private lateinit var viewBinding: ActivityMainBinding
     private var mrsProvider: MRSProvider? = null
     private var settingProvider : SettingProvider? = null
     private lateinit var modalBottomSheetDialog : ModalBottomSheetDialog
     private val SYSTEM_ALERT_WINDOW_PERMISSION = 2084
+    private var isFinishCountdown = true
+    private var isRest = false
     // Handle permission result
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
@@ -48,7 +57,6 @@ class MainActivity : AppCompatActivity(), ModalBottomSheetDialog.Listener{
                             deniedPermissions.add(permissions[i])
                         }
                     }
-                    Toast.makeText(this, "Permission denied: $deniedPermissions", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -63,19 +71,54 @@ class MainActivity : AppCompatActivity(), ModalBottomSheetDialog.Listener{
             }
         }
     }
-
     private fun showPreviewOverlay() {
         settingProvider?.saveSetting(SettingLogic.SETTING_IS_SHOW_PREVIEW, "true")
     }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewBinding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
-        addControls()
-        addEvents()
+        try{
+            addControls()
+            addEvents()
+        }catch (e : Exception){
+            reloadSettup()
+            val intent = Intent(this@MainActivity, MainActivity::class.java)
+            finish()
+            startActivity(intent)
+            overridePendingTransition(0, 0)
+        }
+
     }
 
+    private fun showRatingDialog(){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+            val timeOpenApp = settingProvider?.loadSetting(SettingLogic.TIME_OPEN_APP)?.settingValue
+            if(timeOpenApp == ""){
+                settingProvider?.saveSetting(SettingLogic.TIME_OPEN_APP, "1")
+            }else {
+                try{
+                    var timeOpenAppInt = timeOpenApp?.toInt()
+                    timeOpenAppInt = timeOpenAppInt?.plus(1)
+                    settingProvider?.saveSetting(SettingLogic.TIME_OPEN_APP, timeOpenAppInt.toString())
+                    if(timeOpenAppInt == 2) {
+                        MySmartRate.Rate(
+                            this@MainActivity,
+                            "Rate Us",
+                            "Tell others what you think about this app",
+                            "Continue",
+                            "Please take a moment and rate us on Google Play",
+                            "click here",
+                            "Cancel",
+                            "Thanks for the feedback",
+                            resources.getColor(R.color.secondary_color, null),
+                            4
+                        )
+                    }
+                }catch (ignored: Exception){}
+            }
+        }
+    }
     override fun onResume() {
         super.onResume()
         reloadSettup()
@@ -84,19 +127,39 @@ class MainActivity : AppCompatActivity(), ModalBottomSheetDialog.Listener{
         super.onStop()
         mrsProvider?.onStopApp()
     }
-
     override fun onDestroy() {
         super.onDestroy()
         mrsProvider?.onStopApp()
     }
     private fun addEvents() {
+        viewBinding.imgbtnGift.setOnClickListener(){
+            //Open link via Intent
+            val browserIntent = Intent(Intent.ACTION_VIEW, "https://www.youtube.com/watch?v=QH2-TGUlwu4".toUri())
+            startActivity(browserIntent)
+        }
         viewBinding.btnRecord.setOnClickListener(){
-           val isStartRecord = mrsProvider?.onPauseRecordClicked()
-            if(isStartRecord == false){
-                reloadSettupForStopRecord()
+            if(isFinishCountdown){
+                val countDownTimer = object: CountDownTimer(1000, 1000) {
+                    override fun onTick(millisUntilFinished: Long) {
+                        // Called every second, update UI
+                        val secondsRemaining = millisUntilFinished / 1000
+                        println("Seconds remaining: $secondsRemaining")
+                    }
+
+                    override fun onFinish() {
+                        // Called when the countdown finishes
+                        println("Countdown finished!")
+                        isFinishCountdown = true
+                    }
+                }
+                isFinishCountdown = false
+                val isStartRecord = mrsProvider?.onPauseRecordClicked()
+                if(isStartRecord == false){
+                    reloadSettupForStopRecord()
+                }
+                countDownTimer.start()
             }
         }
-
         viewBinding.cbIsShowPreview.setOnClickListener(){
             if(viewBinding.cbIsShowPreview.isChecked){
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
@@ -116,22 +179,28 @@ class MainActivity : AppCompatActivity(), ModalBottomSheetDialog.Listener{
             startActivity(intent)
             overridePendingTransition(0, 0)
         }
-
         viewBinding.imgbtnSettingBottomDialog.setOnClickListener(){
             val intent = Intent(this@MainActivity, SettingActivity::class.java)
             startActivity(intent)
             overridePendingTransition(0, 0)
         }
-
     }
-
     private fun addControls() {
+        initDefaultValue()
         initMRSProvider()
         initSettingProvider()
-        initDefaultValue()
+        showRatingDialog()
     }
-
     private fun initDefaultValue() {
+        try{
+            val resourceID = settingProvider?.loadSetting(SettingLogic.SETTING_BACKGROUND_IMAGE)?.settingValue
+            Glide.with(this).load(resourceID?.toInt()).into(viewBinding.imgBackground)
+        }catch (e : Exception){
+            val uriBackground = settingProvider?.loadSetting(SettingLogic.SETTING_BACKGROUND_IMAGE)?.settingValue?.toUri()
+            Glide.with(this).load(uriBackground).into(viewBinding.imgBackground)
+        }catch (e : Exception){
+            println("fffffffffff ${e.message}")
+        }
         val isShowPreview = settingProvider?.loadSetting(SettingLogic.SETTING_IS_SHOW_PREVIEW)?.settingValue.toBoolean()
         viewBinding.cbIsShowPreview.isChecked = isShowPreview
         viewBinding.txtDuration.text = "00:00:00"
@@ -153,11 +222,9 @@ class MainActivity : AppCompatActivity(), ModalBottomSheetDialog.Listener{
         }
         viewBinding.txtInforCam.text = inforStr.toString().trim().uppercase(Locale.getDefault())
     }
-
     private fun initSettingProvider() {
         settingProvider = SettingProvider(this@MainActivity)
     }
-
     private fun initMRSProvider() {
         val inflater = LayoutInflater.from(this@MainActivity)
         val removeView = inflater.inflate(R.layout.item_preview_overlay, null) as RelativeLayout
@@ -177,7 +244,6 @@ class MainActivity : AppCompatActivity(), ModalBottomSheetDialog.Listener{
             requestPermissions()
         }
     }
-
     private fun checkPermisionOverlayScreen() : Boolean{
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this@MainActivity)) {
            requestPermissionOverlayScreen()
@@ -194,7 +260,6 @@ class MainActivity : AppCompatActivity(), ModalBottomSheetDialog.Listener{
             ActivityCompat.requestPermissions(this, MRSProvider.CAMERA_PERMISSION_LOW30, MRSProvider.CAMERA_PERMISSION_REQUEST_CODE)
         }
     }
-
     private fun requestPermissionOverlayScreen(){
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
             val intent = Intent(
@@ -234,7 +299,6 @@ class MainActivity : AppCompatActivity(), ModalBottomSheetDialog.Listener{
                 reloadSettup()
             }
     }
-
     private fun openCamera() {
         modalBottomSheetDialog.dismiss()
         modalBottomSheetDialog = ModalBottomSheetDialog.Builder()
@@ -275,9 +339,7 @@ class MainActivity : AppCompatActivity(), ModalBottomSheetDialog.Listener{
         }else{
         }
     }
-
     private fun reloadSettup(){
-        Toast.makeText(this@MainActivity, mrsProvider?.getRecordService()?.getRecordingState().toString(), Toast.LENGTH_SHORT).show()
         if(mrsProvider?.getRecordService()?.getRecordingState()  != MediaRecordingService.RecordingState.RECORDING){
             initDefaultValue()
             mrsProvider?.un_bindService()
@@ -289,7 +351,6 @@ class MainActivity : AppCompatActivity(), ModalBottomSheetDialog.Listener{
         }
     }
     private fun reloadSettupForStopRecord(){
-        Toast.makeText(this@MainActivity, mrsProvider?.getRecordService()?.getRecordingState().toString(), Toast.LENGTH_SHORT).show()
             initDefaultValue()
             mrsProvider?.un_bindService()
             mrsProvider?.bindService()
@@ -298,4 +359,5 @@ class MainActivity : AppCompatActivity(), ModalBottomSheetDialog.Listener{
                 initMRSProvider()
             }
     }
+
 }

@@ -8,11 +8,14 @@ import android.os.Build
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.provider.Settings
+import android.view.Gravity.CENTER
+import android.view.Gravity.END
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.ImageButton
 import android.widget.RelativeLayout
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.video.QualitySelector
@@ -20,6 +23,7 @@ import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.net.toUri
 import com.bumptech.glide.Glide
+import com.geniusforapp.fancydialog.builders.FancyDialogBuilder
 import guy4444.smartrate.SmartRate
 import nl.invissvenska.modalbottomsheetdialog.Item
 import nl.invissvenska.modalbottomsheetdialog.ModalBottomSheetDialog
@@ -41,6 +45,11 @@ class MainActivity : AppCompatActivity(), ModalBottomSheetDialog.Listener {
     private val SYSTEM_ALERT_WINDOW_PERMISSION = 2084
     private var isFinishCountdown = true
     private var isRest = false
+    private val callback = object : OnBackPressedCallback(true /* enabled by default */) {
+        override fun handleOnBackPressed() {
+            showRatingDialog()
+        }
+    }
     // Handle permission result
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
@@ -79,6 +88,7 @@ class MainActivity : AppCompatActivity(), ModalBottomSheetDialog.Listener {
         viewBinding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
         try{
+            onBackPressedDispatcher.addCallback(this, callback)
             addControls()
             addEvents()
         }catch (e : Exception){
@@ -94,34 +104,50 @@ class MainActivity : AppCompatActivity(), ModalBottomSheetDialog.Listener {
     private fun showRatingDialog(){
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
             val timeOpenApp = settingProvider?.loadSetting(SettingLogic.TIME_OPEN_APP)?.settingValue
-            if(timeOpenApp == ""){
-                settingProvider?.saveSetting(SettingLogic.TIME_OPEN_APP, "1")
-            }else {
-                try{
-                    var timeOpenAppInt = timeOpenApp?.toInt()
-                    timeOpenAppInt = timeOpenAppInt?.plus(1)
-                    settingProvider?.saveSetting(SettingLogic.TIME_OPEN_APP, timeOpenAppInt.toString())
-                    if(timeOpenAppInt == 2) {
-                        MySmartRate.Rate(
-                            this@MainActivity,
-                            "Rate Us",
-                            "Tell others what you think about this app",
-                            "Continue",
-                            "Please take a moment and rate us on Google Play",
-                            "click here",
-                            "Cancel",
-                            "Thanks for the feedback",
-                            resources.getColor(R.color.secondary_color, null),
-                            4
-                        )
-                    }
-                }catch (ignored: Exception){}
+            if(timeOpenApp != MySmartRate.STOP_RATE_REQUEST_SIGNAL){
+                if(timeOpenApp == ""){
+                    settingProvider?.saveSetting(SettingLogic.TIME_OPEN_APP, "1")
+                    finish()
+                }
+                else {
+                    try{
+                        var timeOpenAppInt = timeOpenApp?.toInt()
+                        timeOpenAppInt = timeOpenAppInt?.plus(1)
+                        settingProvider?.saveSetting(SettingLogic.TIME_OPEN_APP, timeOpenAppInt.toString())
+                        if (timeOpenAppInt != null) {
+                            Toast.makeText(this@MainActivity, timeOpenAppInt.toString(), Toast.LENGTH_SHORT).show()
+                            if(timeOpenAppInt % 2 == 0) {
+                                MySmartRate.Rate(
+                                    this@MainActivity,
+                                    "Rate Us",
+                                    "Tell others what you think about this app",
+                                    "Continue",
+                                    "Please take a moment and rate us on Google Play",
+                                    "click here",
+                                    "Cancel",
+                                    "Thanks for the feedback",
+                                    resources.getColor(R.color.secondary_color, null),
+                                    4
+                                )
+                            }else{
+                                finish()
+                            }
+                        }
+                    }catch (ignored: Exception){}
+                }
+            }
+            else{
+                finish()
             }
         }
     }
     override fun onResume() {
         super.onResume()
         reloadSettup()
+    }
+
+    override fun onBackPressed() {
+        super.onBackPressed()
     }
     override fun onStop() {
         super.onStop()
@@ -133,9 +159,17 @@ class MainActivity : AppCompatActivity(), ModalBottomSheetDialog.Listener {
     }
     private fun addEvents() {
         viewBinding.imgbtnGift.setOnClickListener(){
-            //Open link via Intent
-            val browserIntent = Intent(Intent.ACTION_VIEW, "https://www.youtube.com/watch?v=QH2-TGUlwu4".toUri())
-            startActivity(browserIntent)
+            val dialog = FancyDialogBuilder(this, R.style.CustomDialog)
+                .withTextGravity(CENTER)
+                .withPanelGravity(END)
+                .withTitle("Special gift for you!\n")
+                .withSubTitle("Click the button below to discover our new app on CHPlay and unlock a world of possibilities! As a thank you, we're also giving you exclusive access to a selection of top-rated apps on our platform. Don't miss out on this amazing opportunity!")
+                .withPositive("Get Gift!") { view, dialog ->
+                    dialog.dismiss()
+                    val browserIntent = Intent(Intent.ACTION_VIEW, "https://www.youtube.com/watch?v=QH2-TGUlwu4".toUri())
+                    startActivity(browserIntent)
+                }
+            dialog.show()
         }
         viewBinding.btnRecord.setOnClickListener(){
             if(isFinishCountdown){
@@ -189,7 +223,6 @@ class MainActivity : AppCompatActivity(), ModalBottomSheetDialog.Listener {
         initDefaultValue()
         initMRSProvider()
         initSettingProvider()
-        showRatingDialog()
     }
     private fun initDefaultValue() {
         try{

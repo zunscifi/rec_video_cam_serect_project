@@ -17,4 +17,28 @@
         <item name="android:windowTranslucentNavigation">true</item>
         <item name="android:fitsSystemWindows">true</item>
     </style>
+    <style name="CustomDialog" parent="FancyDialogTheme">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="positiveButtonStyle">@style/positiveButtonStyle</item>
+        <item name="negativeButtonStyle">@style/negativeButtonStyle</item>
+        <item name="textTitleColor">#D93830</item>
+        <item name="textSubTitleColor">#D93830</item>
+        <item name="dialogBackground">@color/colorDialogBackground</item>
+    </style>
+
+    <style name="positiveButtonStyle" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="strokeColor">@color/light_red</item>
+        <item name="backgroundColor">@color/light_red</item>
+        <item name="backgroundTint">#D93830</item>
+        <item name="colorButtonNormal">#D93830</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="rippleColor">@color/secondary_color</item>
+    </style>
+
+    <style name="negativeButtonStyle" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="strokeColor">@color/colorTitle</item>
+        <item name="android:textColor">@color/colorTitle</item>
+        <item name="rippleColor">@color/colorTitle</item>
+    </style>
 </resources>

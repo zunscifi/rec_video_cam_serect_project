@@ -17,6 +17,8 @@ import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.widget.AppCompatButton
+import ziuzangdev.repo.app_setting.Control.RecSetting.SettingLogic
+import ziuzangdev.repo.app_setting.Control.RecSetting.SettingProvider
 import ziuzangdev.repo.recordcambackgroundproject.R
 
 object MySmartRate {
@@ -39,6 +41,7 @@ object MySmartRate {
     private const val DEFAULT_TEXT_STOP = "Never ask again"
     private const val DEFAULT_TEXT_CANCEL = "Cancel"
     private const val DEFAULT_TEXT_THANKS = "Thanks for the feedback"
+    public const val STOP_RATE_REQUEST_SIGNAL = "STOP"
     private var continueClicked = false
     fun Rate(
         activity: Activity?,
@@ -199,7 +202,13 @@ object MySmartRate {
         dialogBuilder.setView(dialogView)
         val alertDialog: AlertDialog = dialogBuilder.create()
         alertDialog.setCancelable(false)
-        alertDialog.setCanceledOnTouchOutside(false)
+        alertDialog.setCanceledOnTouchOutside(true)
+        alertDialog.setOnCancelListener {
+            activity.finish()
+        }
+        alertDialog.setOnDismissListener {
+            activity.finish()
+        }
         val alert_LAY_back = dialogView.findViewById<RelativeLayout>(R.id.alert_LAY_back)
         val alert_BTN_ok: AppCompatButton = dialogView.findViewById(R.id.alert_BTN_ok)
         val alert_BTN_later = dialogView.findViewById<Button>(R.id.alert_BTN_later)
@@ -279,6 +288,8 @@ object MySmartRate {
                     _openStoreFrom_Stars = 4
                 }
                 if (selectedStar >= _openStoreFrom_Stars) {
+                    val settingProvider = SettingProvider(activity)
+                    settingProvider.saveSetting(SettingLogic.TIME_OPEN_APP, STOP_RATE_REQUEST_SIGNAL)
                     launchMarket(activity)
                 } else {
                     Toast.makeText(activity, thanksForFeedback, Toast.LENGTH_SHORT).show()
@@ -342,7 +353,10 @@ object MySmartRate {
         }
         if (later_text != null && later_text != "") {
             alert_BTN_later.text = later_text
-            alert_BTN_later.setOnClickListener { alertDialog.dismiss() }
+            alert_BTN_later.setOnClickListener {
+                alertDialog.dismiss()
+                activity.finish()
+            }
         } else {
             alert_BTN_later.visibility = View.INVISIBLE
         }

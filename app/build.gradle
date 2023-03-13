@@ -40,6 +40,7 @@ android {
 }
 
 dependencies {
+    implementation ("com.github.geniusforapp:fancyDialog:1.0.2")
     implementation ("com.github.guy-4444:SmartRateUsDialog-Android:1.00.08")
     implementation ("com.github.bumptech.glide:glide:4.15.0")
     annotationProcessor ("com.github.bumptech.glide:compiler:4.15.0")

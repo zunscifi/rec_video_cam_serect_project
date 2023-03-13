@@ -59,24 +59,39 @@
                     android:orientation="vertical"
                     android:foreground="?android:attr/selectableItemBackground"
                     android:clickable="true">
-                    <TextView
-                        android:layout_marginRight="10dp"
-                        android:layout_marginLeft="10dp"
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center">
+                    <ImageView
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:src="@drawable/baseline_camera_front_24"/>
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Video camera"
-                        android:textSize="18sp"
-                        android:textColor="@color/white"/>
-                    <TextView
-                        android:layout_marginRight="10dp"
-                        android:layout_marginLeft="10dp"
-                        android:id="@+id/txt_setting_video_camera"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Back camera"
-                        android:textSize="15sp"
-                        android:textColor="#E7E8E9"
-                        android:layout_marginBottom="10dp"/>
+                        android:orientation="vertical">
+                        <TextView
+                            android:layout_marginRight="10dp"
+                            android:layout_marginLeft="10dp"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Video camera"
+                            android:textSize="18sp"
+                            android:textColor="@color/white"/>
+                        <TextView
+                            android:layout_marginRight="10dp"
+                            android:layout_marginLeft="10dp"
+                            android:id="@+id/txt_setting_video_camera"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Back camera"
+                            android:textSize="15sp"
+                            android:textColor="#E7E8E9"
+                            android:layout_marginBottom="10dp"/>
+                    </LinearLayout>
+                </LinearLayout>
                     <View
                         android:layout_marginRight="8dp"
                         android:layout_marginLeft="8dp"
@@ -92,6 +107,19 @@
                 android:orientation="vertical"
                 android:foreground="?android:attr/selectableItemBackground"
                 android:clickable="true">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:src="@drawable/baseline_high_quality_24"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
                 <TextView
                     android:layout_marginRight="10dp"
                     android:layout_marginLeft="10dp"
@@ -110,6 +138,8 @@
                     android:textSize="15sp"
                     android:textColor="#E7E8E9"
                     android:layout_marginBottom="10dp"/>
+            </LinearLayout>
+        </LinearLayout>
                 <View
                     android:layout_marginRight="8dp"
                     android:layout_marginLeft="8dp"
@@ -125,6 +155,19 @@
                 android:orientation="vertical"
                 android:foreground="?android:attr/selectableItemBackground"
                 android:clickable="true">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:src="@drawable/baseline_preview_24"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
                 <TextView
                     android:layout_marginRight="10dp"
                     android:layout_marginLeft="10dp"
@@ -143,6 +186,8 @@
                     android:textSize="15sp"
                     android:textColor="#E7E8E9"
                     android:layout_marginBottom="10dp"/>
+            </LinearLayout>
+        </LinearLayout>
                 <View
                     android:layout_marginRight="8dp"
                     android:layout_marginLeft="8dp"
@@ -158,6 +203,19 @@
                 android:orientation="vertical"
                 android:foreground="?android:attr/selectableItemBackground"
                 android:clickable="true">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:src="@drawable/baseline_video_file_24"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
                 <TextView
                     android:layout_marginRight="10dp"
                     android:layout_marginLeft="10dp"
@@ -176,6 +234,8 @@
                     android:textSize="15sp"
                     android:textColor="#E7E8E9"
                     android:layout_marginBottom="10dp"/>
+            </LinearLayout>
+        </LinearLayout>
                 <View
                     android:layout_marginRight="8dp"
                     android:layout_marginLeft="8dp"
@@ -191,6 +251,19 @@
                 android:orientation="vertical"
                 android:foreground="?android:attr/selectableItemBackground"
                 android:clickable="true">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:src="@drawable/baseline_photo_camera_back_24"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
                 <TextView
                     android:layout_marginRight="10dp"
                     android:layout_marginLeft="10dp"
@@ -209,6 +282,8 @@
                     android:textSize="15sp"
                     android:textColor="#E7E8E9"
                     android:layout_marginBottom="10dp"/>
+            </LinearLayout>
+        </LinearLayout>
                 <View
                     android:layout_marginRight="8dp"
                     android:layout_marginLeft="8dp"
@@ -224,6 +299,19 @@
                 android:orientation="vertical"
                 android:foreground="?android:attr/selectableItemBackground"
                 android:clickable="true">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:src="@drawable/baseline_shopping_cart_24"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
                 <TextView
                     android:layout_marginRight="10dp"
                     android:layout_marginLeft="10dp"
@@ -243,6 +331,8 @@
                     android:textColor="#E7E8E9"
                     android:layout_marginBottom="10dp"/>
             </LinearLayout>
+        </LinearLayout>
+            </LinearLayout>
             <TextView
                 android:layout_marginRight="10dp"
                 android:layout_marginLeft="10dp"
@@ -261,6 +351,19 @@
                 android:orientation="vertical"
                 android:foreground="?android:attr/selectableItemBackground"
                 android:clickable="true">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:src="@drawable/baseline_share_24"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
                 <TextView
                     android:layout_marginRight="10dp"
                     android:layout_marginLeft="10dp"
@@ -278,6 +381,8 @@
                     android:textSize="15sp"
                     android:textColor="#E7E8E9"
                     android:layout_marginBottom="10dp"/>
+            </LinearLayout>
+        </LinearLayout>
                 <View
                     android:layout_marginRight="8dp"
                     android:layout_marginLeft="8dp"
@@ -293,6 +398,19 @@
                 android:orientation="vertical"
                 android:foreground="?android:attr/selectableItemBackground"
                 android:clickable="true">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:src="@drawable/baseline_apps_24"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
                 <TextView
                     android:layout_marginRight="10dp"
                     android:layout_marginLeft="10dp"
@@ -310,6 +428,8 @@
                     android:textSize="15sp"
                     android:textColor="#E7E8E9"
                     android:layout_marginBottom="10dp"/>
+            </LinearLayout>
+        </LinearLayout>
                 <View
                     android:layout_marginRight="8dp"
                     android:layout_marginLeft="8dp"
@@ -325,6 +445,19 @@
                 android:orientation="vertical"
                 android:foreground="?android:attr/selectableItemBackground"
                 android:clickable="true">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:src="@drawable/baseline_rate_review_24"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
                 <TextView
                     android:layout_marginRight="10dp"
                     android:layout_marginLeft="10dp"
@@ -342,6 +475,8 @@
                     android:textSize="15sp"
                     android:textColor="#E7E8E9"
                     android:layout_marginBottom="10dp"/>
+            </LinearLayout>
+        </LinearLayout>
             </LinearLayout>
         </LinearLayout>
     </ScrollView>

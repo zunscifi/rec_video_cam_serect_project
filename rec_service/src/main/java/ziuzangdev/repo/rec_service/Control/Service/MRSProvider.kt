@@ -86,8 +86,6 @@ class MRSProvider(
                 ServiceCompat.stopForeground(it, ServiceCompat.STOP_FOREGROUND_REMOVE)
                 recordingService?.stopSelf()
             }
-        } else {
-            recordingService?.startRunningInForeground(activityClass)
         }
         recordingService?.unbindPreview()
         recordingService?.removeListener(this)
@@ -125,6 +123,7 @@ class MRSProvider(
                 if(isShowPreview){
                     recordingService?.initializeBubblePreviewCam(removeView, previewView, activityClass, openApp)
                 }
+                recordingService?.startRunningInForeground(activityClass)
                 return true
             }
             else -> {
